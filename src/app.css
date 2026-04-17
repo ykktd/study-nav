@@ -1,0 +1,56 @@
+@import 'tailwindcss';
+
+/* ---------- design tokens ---------- */
+:root {
+	--bg: oklch(0.185 0.008 250);
+	--surface-1: oklch(0.215 0.008 250);
+	--surface-2: oklch(0.245 0.009 250);
+	--surface-3: oklch(0.285 0.01 250);
+	--hairline: oklch(0.33 0.01 250 / 0.9);
+	--hairline-soft: oklch(0.33 0.01 250 / 0.55);
+
+	--ink: oklch(0.94 0.005 250);
+	--ink-2: oklch(0.74 0.008 250);
+	--ink-3: oklch(0.58 0.01 250);
+	--ink-4: oklch(0.45 0.01 250);
+
+	--prog-low: oklch(0.66 0.16 27);
+	--prog-mid: oklch(0.8 0.13 88);
+	--prog-high: oklch(0.72 0.13 158);
+	--track: oklch(0.32 0.008 250);
+
+	--radius-card: 14px;
+	--radius-ctrl: 9px;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	background: var(--bg);
+	color: var(--ink);
+	font-family:
+		'Noto Sans JP',
+		'IBM Plex Sans',
+		system-ui,
+		sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+	-webkit-font-smoothing: antialiased;
+	letter-spacing: 0.01em;
+	min-height: 100vh;
+}
+
+.mono {
+	font-family: 'IBM Plex Mono', ui-monospace, monospace;
+	font-feature-settings: 'tnum' 1;
+}
