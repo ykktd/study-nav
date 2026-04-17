@@ -1,6 +1,7 @@
 -- subjects table
 create table if not exists subjects (
   id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
   name        text not null,
   professor   text,
   day_period  text,
@@ -28,21 +29,26 @@ create table if not exists resources (
 alter table subjects enable row level security;
 alter table resources enable row level security;
 
--- Policies: authenticated users have full access
-create policy "auth users can select subjects"
-  on subjects for select to authenticated using (true);
-create policy "auth users can insert subjects"
-  on subjects for insert to authenticated with check (true);
-create policy "auth users can update subjects"
-  on subjects for update to authenticated using (true);
-create policy "auth users can delete subjects"
-  on subjects for delete to authenticated using (true);
+-- Policies: users can only access their own subjects
+create policy "users can select own subjects"
+  on subjects for select to authenticated using (auth.uid() = user_id);
+create policy "users can insert own subjects"
+  on subjects for insert to authenticated with check (auth.uid() = user_id);
+create policy "users can update own subjects"
+  on subjects for update to authenticated using (auth.uid() = user_id);
+create policy "users can delete own subjects"
+  on subjects for delete to authenticated using (auth.uid() = user_id);
 
-create policy "auth users can select resources"
-  on resources for select to authenticated using (true);
-create policy "auth users can insert resources"
-  on resources for insert to authenticated with check (true);
-create policy "auth users can update resources"
-  on resources for update to authenticated using (true);
-create policy "auth users can delete resources"
-  on resources for delete to authenticated using (true);
+-- Policies: users can only access resources belonging to their own subjects
+create policy "users can select own resources"
+  on resources for select to authenticated
+  using (exists (select 1 from subjects where subjects.id = resources.subject_id and subjects.user_id = auth.uid()));
+create policy "users can insert own resources"
+  on resources for insert to authenticated
+  with check (exists (select 1 from subjects where subjects.id = resources.subject_id and subjects.user_id = auth.uid()));
+create policy "users can update own resources"
+  on resources for update to authenticated
+  using (exists (select 1 from subjects where subjects.id = resources.subject_id and subjects.user_id = auth.uid()));
+create policy "users can delete own resources"
+  on resources for delete to authenticated
+  using (exists (select 1 from subjects where subjects.id = resources.subject_id and subjects.user_id = auth.uid()));

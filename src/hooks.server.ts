@@ -25,7 +25,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const {
 			data: { session }
 		} = await event.locals.supabase.auth.getSession();
-		return { session };
+		if (!session) return { session: null, user: null };
+
+		const {
+			data: { user },
+			error
+		} = await event.locals.supabase.auth.getUser();
+		if (error) return { session: null, user: null };
+
+		return { session, user };
 	};
 
 	// Protect all routes except /login and /auth
@@ -33,8 +41,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	const isPublic = publicPaths.some((p) => event.url.pathname.startsWith(p));
 
 	if (!isPublic) {
-		const { session } = await event.locals.safeGetSession();
-		if (!session) {
+		const { user } = await event.locals.safeGetSession();
+		if (!user) {
 			throw redirect(303, '/login');
 		}
 	}

@@ -67,7 +67,11 @@ export const actions: Actions = {
 
 		if (!name || !term) return fail(400, { error: '科目名と学期は必須です' });
 
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: '未認証です' });
+
 		const { error } = await locals.supabase.from('subjects').insert({
+			user_id: user.id,
 			name,
 			professor,
 			day_period,
