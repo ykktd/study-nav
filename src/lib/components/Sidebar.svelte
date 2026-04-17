@@ -94,8 +94,8 @@
 		font-size: 15px;
 	}
 	.accent {
-		color: var(--ink-3);
-		font-weight: 400;
+		color: var(--ink);
+		font-weight: 600;
 	}
 	.nav {
 		display: flex;

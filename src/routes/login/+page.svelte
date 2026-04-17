@@ -107,8 +107,8 @@
 		color: var(--ink);
 	}
 	.accent {
-		color: var(--ink-3);
-		font-weight: 400;
+		color: var(--ink);
+		font-weight: 600;
 	}
 	h1 {
 		font-size: 20px;

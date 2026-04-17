@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" viewBox="0 0 32 32">
+  <defs>
+    <mask id="m">
+      <rect width="32" height="32" rx="8" fill="white"/>
+      <circle cx="16" cy="16" r="6" fill="black"/>
+    </mask>
+  </defs>
+  <foreignObject x="0" y="0" width="32" height="32" mask="url(#m)">
+    <xhtml:div style="width:32px;height:32px;background:conic-gradient(from 210deg at 50% 50%,oklch(0.66 0.16 27),oklch(0.8 0.13 88),oklch(0.72 0.13 158),oklch(0.66 0.16 27))"/>
+  </foreignObject>
+</svg>
