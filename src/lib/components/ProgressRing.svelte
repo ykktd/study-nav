@@ -21,11 +21,11 @@
 </script>
 
 <div
-	class="ring-wrap"
+	class="relative shrink-0"
 	data-state={state}
-	style="--size:{size}px; --stroke:{stroke}px"
+	style="width:{size}px; height:{size}px"
 >
-	<svg viewBox="0 0 {size} {size}" style="transform:rotate(-90deg)">
+	<svg viewBox="0 0 {size} {size}" class="w-full h-full" style="transform:rotate(-90deg)">
 		<circle class="track" cx={cx} cy={cx} r={r} fill="none" stroke-width={stroke} />
 		<circle
 			class="bar"
@@ -38,62 +38,23 @@
 			stroke-dashoffset={offset.toFixed(2)}
 		/>
 	</svg>
-	<div class="ring-label mono">
-		<span class="frac">{label}</span>
-		<span class="pct">{pctLabel}</span>
+	<div class="mono absolute inset-0 flex flex-col items-center justify-center leading-none">
+		<span class="text-[12.5px] text-ink tracking-[0.02em]">{label}</span>
+		<span class="text-[9px] text-ink-4 mt-0.75 tracking-[0.05em]">{pctLabel}</span>
 	</div>
 </div>
 
 <style>
-	.ring-wrap {
-		width: var(--size);
-		height: var(--size);
-		position: relative;
-		flex-shrink: 0;
-	}
-	.ring-wrap svg {
-		width: 100%;
-		height: 100%;
-	}
+	/* SVG stroke cannot be set via Tailwind utilities */
 	.track {
-		stroke: var(--track);
+		stroke: var(--color-track);
 	}
 	.bar {
 		stroke-linecap: round;
-		transition:
-			stroke-dashoffset 0.6s ease,
-			stroke 0.3s ease;
+		transition: stroke-dashoffset 0.6s ease, stroke 0.3s ease;
 	}
-	.ring-wrap[data-state='low'] .bar {
-		stroke: var(--prog-low);
-	}
-	.ring-wrap[data-state='mid'] .bar {
-		stroke: var(--prog-mid);
-	}
-	.ring-wrap[data-state='high'] .bar {
-		stroke: var(--prog-high);
-	}
-	.ring-wrap[data-state='done'] .bar {
-		stroke: var(--prog-high);
-	}
-	.ring-label {
-		position: absolute;
-		inset: 0;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		line-height: 1;
-	}
-	.frac {
-		font-size: 12.5px;
-		color: var(--ink);
-		letter-spacing: 0.02em;
-	}
-	.pct {
-		font-size: 9px;
-		color: var(--ink-4);
-		margin-top: 3px;
-		letter-spacing: 0.05em;
-	}
+	[data-state='low'] .bar  { stroke: var(--color-prog-low); }
+	[data-state='mid'] .bar  { stroke: var(--color-prog-mid); }
+	[data-state='high'] .bar { stroke: var(--color-prog-high); }
+	[data-state='done'] .bar { stroke: var(--color-prog-high); }
 </style>

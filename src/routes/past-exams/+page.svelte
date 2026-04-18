@@ -102,10 +102,9 @@
 	}
 
 	function colorFor(p: number): string {
-		if (p >= 100) return 'var(--prog-high)';
-		if (p > 66) return 'var(--prog-high)';
-		if (p > 33) return 'var(--prog-mid)';
-		return 'var(--prog-low)';
+		if (p > 66) return 'var(--color-prog-high)';
+		if (p > 33) return 'var(--color-prog-mid)';
+		return 'var(--color-prog-low)';
 	}
 
 	const totalResources = $derived(resources.length);
@@ -117,53 +116,52 @@
 	<title>study-nav — 過去問一覧</title>
 </svelte:head>
 
-<div class="main-inner">
-	<div class="topbar">
+<div class="w-full max-w-7xl px-12 pt-8.5 pb-20">
+	<div class="mb-6 flex items-end justify-between gap-6">
 		<div>
-			<div class="crumbs mono">/ past-exams</div>
-			<h1>過去問一覧</h1>
-			<div class="sub">全科目の過去問を横断で管理。</div>
+			<div class="mono mb-2 text-[12px] tracking-[0.06em] text-ink-4">/ past-exams</div>
+			<h1 class="m-0 text-[26px] font-semibold tracking-[-0.01em]">過去問一覧</h1>
+			<div class="mt-1.5 text-[13.5px] text-ink-3">全科目の過去問を横断で管理。</div>
 		</div>
 	</div>
 
 	<!-- summary -->
-	<section class="summary">
-		<div class="cell">
+	<section class="mb-6.5 grid grid-cols-[1.2fr_1fr_1fr_1fr]">
+		<div class="flex items-center gap-4 border-r border-hairline-soft py-4.5 pr-5.5">
 			<ProgressRing done={totalDone} total={totalResources} size={56} stroke={5} />
-			<div class="cell-text">
-				<div class="k">全体進捗</div>
-				<div class="v mono">{totalPct}<span class="unit">%</span></div>
+			<div class="flex-1">
+				<div class="text-[11px] uppercase tracking-widest text-ink-4">全体進捗</div>
+				<div class="mono mt-1 text-[22px] font-medium tracking-[-0.01em]">{totalPct}<span class="ml-1 text-[13px] font-normal text-ink-3">%</span></div>
 			</div>
 		</div>
-		<div class="cell">
-			<div class="cell-text">
-				<div class="k">総数</div>
-				<div class="v mono">{totalResources}<span class="unit"> 件</span></div>
+		{#each [
+			{ k: '総数', v: totalResources, unit: ' 件' },
+			{ k: '完了', v: totalDone, unit: ' 件' },
+			{ k: '残り', v: totalResources - totalDone, unit: ' 件' }
+		] as cell, i}
+			<div class="flex items-center gap-4 px-5.5 py-4.5" class:border-r={i < 2} class:border-hairline-soft={i < 2}>
+				<div class="flex-1">
+					<div class="text-[11px] uppercase tracking-widest text-ink-4">{cell.k}</div>
+					<div class="mono mt-1 text-[22px] font-medium tracking-[-0.01em]">{cell.v}<span class="ml-1 text-[13px] font-normal text-ink-3">{cell.unit}</span></div>
+				</div>
 			</div>
-		</div>
-		<div class="cell">
-			<div class="cell-text">
-				<div class="k">完了</div>
-				<div class="v mono">{totalDone}<span class="unit"> 件</span></div>
-			</div>
-		</div>
-		<div class="cell">
-			<div class="cell-text">
-				<div class="k">残り</div>
-				<div class="v mono">{totalResources - totalDone}<span class="unit"> 件</span></div>
-			</div>
-		</div>
+		{/each}
 	</section>
 
 	<!-- filter bar -->
-	<div class="filters">
-		<div class="search">
-			<svg class="i i-sm" viewBox="0 0 24 24"
+	<div class="mb-4.5 flex flex-wrap items-center gap-3.5 rounded-[10px] border border-hairline-soft bg-surface-1 px-3.5 py-2.5">
+		<div class="flex min-w-60 flex-1 items-center gap-2 rounded-lg border border-hairline-soft bg-surface-2 px-2.5 py-1.5 text-ink-3">
+			<svg class="size-3 shrink-0 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24"
 				><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg
 			>
-			<input id="q" bind:value={query} placeholder="ファイル名・科目で検索..." />
+			<input
+				id="q"
+				bind:value={query}
+				placeholder="ファイル名・科目で検索..."
+				class="flex-1 border-none bg-transparent font-[inherit] text-[13px] text-ink outline-none placeholder:text-ink-4"
+			/>
 		</div>
-		<div class="seg" role="tablist">
+		<div class="flex overflow-hidden rounded-lg border border-hairline-soft bg-surface-2">
 			{#each [
 				{ key: 'all', label: 'すべて', count: base.length },
 				{ key: 'todo', label: '未完了', count: base.length - baseDone },
@@ -172,76 +170,78 @@
 				<button
 					role="tab"
 					aria-selected={statusFilter === seg.key}
+					class="cursor-pointer border-none border-r border-hairline-soft bg-transparent px-3 py-1.5 font-[inherit] text-[12.5px] text-ink-3 last:border-r-0"
 					class:on={statusFilter === seg.key}
 					onclick={() => (statusFilter = seg.key as 'all' | 'todo' | 'done')}
 				>
-					{seg.label} <span class="count mono">{seg.count}</span>
+					{seg.label} <span class="mono ml-1.5 text-[10.5px] text-ink-4" class:on-count={statusFilter === seg.key}>{seg.count}</span>
 				</button>
 			{/each}
 		</div>
-		<div class="seg">
-			<button class:on={viewMode === 'grouped'} onclick={() => (viewMode = 'grouped')}>科目別</button>
-			<button class:on={viewMode === 'flat'} onclick={() => (viewMode = 'flat')}>フラット</button>
+		<div class="flex overflow-hidden rounded-lg border border-hairline-soft bg-surface-2">
+			<button class="cursor-pointer border-none border-r border-hairline-soft bg-transparent px-3 py-1.5 font-[inherit] text-[12.5px] text-ink-3" class:on={viewMode === 'grouped'} onclick={() => (viewMode = 'grouped')}>科目別</button>
+			<button class="cursor-pointer border-none bg-transparent px-3 py-1.5 font-[inherit] text-[12.5px] text-ink-3" class:on={viewMode === 'flat'} onclick={() => (viewMode = 'flat')}>フラット</button>
 		</div>
 	</div>
 
 	<!-- subject chips -->
-	<div class="subject-chips">
+	<div class="mb-4.5 flex flex-wrap gap-1.5">
 		<button
-			class="s-chip"
+			class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-hairline-soft bg-transparent px-3 py-1.5 text-[12.5px] font-[inherit] text-ink-3 hover:border-hairline hover:text-ink"
 			class:on={selectedSubjects.size === 0}
 			onclick={() => toggleSubject('__all')}
 		>
 			すべての科目
-			<span class="c mono">{totalDone}/{totalResources}</span>
+			<span class="mono text-[10.5px] text-ink-4">{totalDone}/{totalResources}</span>
 		</button>
 		{#each subjects as s}
 			{@const sc = sCounts.get(s.id) ?? { total: 0, done: 0 }}
 			<button
-				class="s-chip"
+				class="inline-flex cursor-pointer items-center gap-2 rounded-full border border-hairline-soft bg-transparent px-3 py-1.5 text-[12.5px] font-[inherit] text-ink-3 hover:border-hairline hover:text-ink"
 				class:on={selectedSubjects.has(s.id)}
 				onclick={() => toggleSubject(s.id)}
 			>
 				{s.name}
-				<span class="c mono">{sc.done}/{sc.total}</span>
+				<span class="mono text-[10.5px] text-ink-4" class:on-count={selectedSubjects.has(s.id)}>{sc.done}/{sc.total}</span>
 			</button>
 		{/each}
 	</div>
 
 	<!-- body -->
 	{#if visibleItems.length === 0}
-		<div class="empty">条件に一致する過去問がありません。</div>
+		<div class="rounded-xl border border-dashed border-hairline-soft px-5 py-15 text-center text-ink-3">条件に一致する過去問がありません。</div>
 	{:else if viewMode === 'grouped'}
 		{#each grouped as group (group.subject.id)}
 			{@const t = group.items.length}
 			{@const d = group.items.filter((r) => r.done).length}
 			{@const p = t > 0 ? Math.round((d / t) * 100) : 0}
 			{@const collapsed = collapsedGroups.has(group.subject.id)}
-			<section class="group" class:collapsed>
+			<section class="mb-3.5 overflow-hidden rounded-xl border border-hairline-soft bg-surface-1">
 				<header
-					class="group-head"
+					class="flex cursor-pointer items-center justify-between border-b border-hairline-soft bg-surface-2 px-4.5 py-3.5 hover:bg-surface-3"
+					class:no-border={collapsed}
 					role="button"
 					tabindex="0"
 					onclick={() => toggleGroup(group.subject.id)}
 					onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && toggleGroup(group.subject.id)}
 				>
-					<div class="group-left">
-						<span class="chev mono" style:transform={collapsed ? 'rotate(-90deg)' : ''}>⌄</span>
-						<span class="group-title">{group.subject.name}</span>
+					<div class="flex min-w-0 items-center gap-3">
+						<span class="mono text-ink-3 transition-transform duration-150" style:transform={collapsed ? 'rotate(-90deg)' : ''}>⌄</span>
+						<span class="text-[14.5px] font-medium text-ink">{group.subject.name}</span>
 						{#if group.subject.exam_date}
-							<span class="group-exam">試験 {formatExamDate(group.subject.exam_date)}</span>
+							<span class="mono text-[11.5px] text-ink-4">試験 {formatExamDate(group.subject.exam_date)}</span>
 						{/if}
 					</div>
-					<div class="group-meta">
-						<div class="mini-bar">
-							<span style="width:{p}%; background:{colorFor(p)}"></span>
+					<div class="flex items-center gap-3 text-[12px] text-ink-3">
+						<div class="h-1.25 w-35 overflow-hidden rounded-full bg-track">
+							<span class="block h-full rounded-full transition-[width] duration-400" style="width:{p}%; background:{colorFor(p)}"></span>
 						</div>
-						<span class="group-frac mono">{d}/{t}</span>
+						<span class="mono min-w-10.5 text-right text-[12.5px] text-ink-2">{d}/{t}</span>
 					</div>
 				</header>
 				{#if !collapsed}
-					<div class="group-body">
-						<div class="row head">
+					<div class="flex flex-col">
+						<div class="row-head row-grid border-b border-hairline-soft px-4.5 py-2 text-[10.5px] uppercase tracking-[0.12em] text-ink-4">
 							<div></div>
 							<div>ファイル名</div>
 							<div>科目</div>
@@ -256,9 +256,9 @@
 			</section>
 		{/each}
 	{:else}
-		<section class="group">
-			<div class="group-body">
-				<div class="row head">
+		<section class="overflow-hidden rounded-xl border border-hairline-soft bg-surface-1">
+			<div class="flex flex-col">
+				<div class="row-head row-grid border-b border-hairline-soft px-4.5 py-2 text-[10.5px] uppercase tracking-[0.12em] text-ink-4">
 					<div></div>
 					<div>ファイル名</div>
 					<div>科目</div>
@@ -274,33 +274,34 @@
 </div>
 
 {#snippet resourceRow(item: Resource, subj: Subject)}
-	<div class="row" class:done-row={item.done}>
+	<div
+		class="group row-grid border-b border-hairline-soft px-4.5 py-2.5 transition-[background] duration-120 last:border-b-0 hover:bg-surface-2"
+		class:done-row={item.done}
+	>
 		<CheckBox
 			resourceId={item.id}
 			bind:done={item.done}
 		/>
 		<div>
-			<div class="name">{item.name}</div>
+			<div class="overflow-hidden text-ellipsis whitespace-nowrap text-[13.5px] text-ink" class:line-through={item.done} class:text-ink-3={item.done}>{item.name}</div>
 		</div>
 		<div>
-			<span class="subj-tag">{subj?.name ?? '—'}</span>
+			<span class="inline-flex items-center gap-2 whitespace-nowrap rounded-md border border-hairline-soft bg-surface-2 px-2.5 py-1 text-[12.5px] text-ink-2">{subj?.name ?? '—'}</span>
 		</div>
 		<div>
-			<span class="kind">{item.url.includes('drive.google.com') ? 'Drive' : new URL(item.url).hostname.replace('www.', '')}</span>
+			<span class="mono inline-block rounded border border-hairline-soft bg-surface-2 px-1.75 py-0.5 text-[10.5px] text-ink-3">{item.url.includes('drive.google.com') ? 'Drive' : new URL(item.url).hostname.replace('www.', '')}</span>
 		</div>
-		<div class="row-actions">
+		<div class="flex justify-end gap-0.5 opacity-0 transition-opacity duration-150 group-hover:opacity-100">
 			<a
 				href={item.url}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="icon-btn"
+				class="inline-flex size-6.5 cursor-pointer items-center justify-center rounded-md border-none bg-transparent p-0 text-ink-3 no-underline hover:bg-surface-3 hover:text-ink"
 				title="開く"
 				onclick={(e) => e.stopPropagation()}
 			>
-				<svg class="i i-sm" viewBox="0 0 24 24"
-					><path
-						d="M14 4h6v6M20 4 10 14M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"
-					/></svg
+				<svg class="size-3 fill-none stroke-current stroke-[1.6] [stroke-linecap:round] [stroke-linejoin:round]" viewBox="0 0 24 24"
+					><path d="M14 4h6v6M20 4 10 14M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg
 				>
 			</a>
 		</div>
@@ -308,321 +309,28 @@
 {/snippet}
 
 <style>
-	.main-inner {
-		padding: 34px 48px 80px;
-		max-width: 1280px;
-		width: 100%;
-	}
-	.topbar {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		margin-bottom: 24px;
-		gap: 24px;
-	}
-	.crumbs {
-		font-size: 12px;
-		color: var(--ink-4);
-		letter-spacing: 0.06em;
-		margin-bottom: 8px;
-	}
-	h1 {
-		font-size: 26px;
-		font-weight: 600;
-		margin: 0;
-		letter-spacing: -0.01em;
-	}
-	.sub {
-		color: var(--ink-3);
-		font-size: 13.5px;
-		margin-top: 6px;
-	}
-
-	/* summary */
-	.summary {
-		display: grid;
-		grid-template-columns: 1.2fr 1fr 1fr 1fr;
-		margin-bottom: 26px;
-	}
-	.cell {
-		padding: 18px 22px 18px 0;
-		border-right: 1px solid var(--hairline-soft);
-		display: flex;
-		align-items: center;
-		gap: 16px;
-	}
-	.cell:first-child { padding-left: 0; }
-	.cell:last-child { border-right: none; }
-	.cell-text { flex: 1; }
-	.k {
-		font-size: 11px;
-		color: var(--ink-4);
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-	}
-	.v {
-		font-size: 22px;
-		font-weight: 500;
-		margin-top: 4px;
-		letter-spacing: -0.01em;
-	}
-	.unit {
-		font-size: 13px;
-		color: var(--ink-3);
-		margin-left: 4px;
-		font-weight: 400;
-	}
-
-	/* filter bar */
-	.filters {
-		display: flex;
-		align-items: center;
-		gap: 14px;
-		border: 1px solid var(--hairline-soft);
-		border-radius: 10px;
-		background: var(--surface-1);
-		padding: 10px 14px;
-		margin-bottom: 18px;
-		flex-wrap: wrap;
-	}
-	.search {
-		display: flex;
-		align-items: center;
-		gap: 8px;
-		flex: 1;
-		min-width: 240px;
-		background: var(--surface-2);
-		border: 1px solid var(--hairline-soft);
-		border-radius: 8px;
-		padding: 6px 10px;
-		color: var(--ink-3);
-	}
-	.search input {
-		background: transparent;
-		border: none;
-		outline: none;
-		color: var(--ink);
-		font: inherit;
-		flex: 1;
-		font-size: 13px;
-	}
-	.search input::placeholder { color: var(--ink-4); }
-	.seg {
-		display: flex;
-		border: 1px solid var(--hairline-soft);
-		border-radius: 8px;
-		overflow: hidden;
-		background: var(--surface-2);
-	}
-	.seg button {
-		padding: 6px 12px;
-		border: none;
-		background: transparent;
-		color: var(--ink-3);
-		font-size: 12.5px;
-		cursor: pointer;
-		border-right: 1px solid var(--hairline-soft);
-		font: inherit;
-	}
-	.seg button:last-child { border-right: none; }
-	.seg button.on { background: var(--surface-3); color: var(--ink); }
-	.count {
-		font-size: 10.5px;
-		color: var(--ink-4);
-		margin-left: 6px;
-	}
-	.seg button.on .count { color: var(--ink-3); }
-
-	/* subject chips */
-	.subject-chips {
-		display: flex;
-		gap: 6px;
-		flex-wrap: wrap;
-		margin-bottom: 18px;
-	}
-	.s-chip {
-		font: inherit;
-		font-size: 12.5px;
-		padding: 6px 12px;
-		border-radius: 999px;
-		border: 1px solid var(--hairline-soft);
-		background: transparent;
-		color: var(--ink-3);
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-	}
-	.s-chip:hover { color: var(--ink); border-color: var(--hairline); }
-	.s-chip.on { background: var(--surface-2); color: var(--ink); border-color: var(--hairline); }
-	.c {
-		font-size: 10.5px;
-		color: var(--ink-4);
-	}
-	.s-chip.on .c { color: var(--ink-3); }
-
-	/* groups */
-	.group {
-		border: 1px solid var(--hairline-soft);
-		border-radius: 12px;
-		background: var(--surface-1);
-		margin-bottom: 14px;
-		overflow: hidden;
-	}
-	.group-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 14px 18px;
-		border-bottom: 1px solid var(--hairline-soft);
-		background: var(--surface-2);
-		cursor: pointer;
-	}
-	.group-head:hover { background: var(--surface-3); }
-	.group.collapsed .group-head { border-bottom: none; }
-	.group-left {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		min-width: 0;
-	}
-	.chev {
-		color: var(--ink-3);
-		transition: transform 0.15s;
-	}
-	.group-title {
-		font-size: 14.5px;
-		font-weight: 500;
-		color: var(--ink);
-	}
-	.group-meta {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-		color: var(--ink-3);
-		font-size: 12px;
-	}
-	.group-exam {
-		font-family: 'IBM Plex Mono', monospace;
-		color: var(--ink-4);
-		font-size: 11.5px;
-	}
-	.mini-bar {
-		width: 140px;
-		height: 5px;
-		background: var(--track);
-		border-radius: 999px;
-		overflow: hidden;
-	}
-	.mini-bar span {
-		display: block;
-		height: 100%;
-		border-radius: 999px;
-		transition: width 0.4s ease, background 0.3s;
-	}
-	.group-frac {
-		color: var(--ink-2);
-		font-size: 12.5px;
-		min-width: 42px;
-		text-align: right;
-	}
-
-	/* table rows */
-	.group-body { display: flex; flex-direction: column; }
-	.row {
+	/* row grid layout — shared between header and data rows */
+	.row-grid {
 		display: grid;
 		grid-template-columns: 24px 1.6fr 0.8fr 0.8fr 60px;
-		align-items: center;
 		gap: 14px;
-		padding: 10px 18px;
-		border-bottom: 1px solid var(--hairline-soft);
-		transition: background 0.12s;
-	}
-	.row:last-child { border-bottom: none; }
-	.row:hover:not(.head) { background: var(--surface-2); }
-	.row.head {
-		font-size: 10.5px;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		color: var(--ink-4);
-		padding: 8px 18px;
-		cursor: default;
-	}
-	.row.head:hover { background: transparent; }
-	.name {
-		font-size: 13.5px;
-		color: var(--ink);
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-	.done-row .name {
-		color: var(--ink-3);
-		text-decoration: line-through;
-		text-decoration-color: var(--ink-4);
-	}
-	.subj-tag {
-		display: inline-flex;
 		align-items: center;
-		gap: 8px;
-		font-size: 12.5px;
-		color: var(--ink-2);
-		padding: 4px 10px;
-		border-radius: 6px;
-		border: 1px solid var(--hairline-soft);
-		background: var(--surface-2);
-		white-space: nowrap;
 	}
-	.kind {
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 10.5px;
-		color: var(--ink-3);
-		padding: 2px 7px;
-		border-radius: 4px;
-		border: 1px solid var(--hairline-soft);
-		display: inline-block;
-		background: var(--surface-2);
-	}
-	.row-actions {
-		display: flex;
-		gap: 2px;
-		justify-content: flex-end;
-		opacity: 0;
-		transition: 0.15s;
-	}
-	.row:hover .row-actions { opacity: 1; }
 
-	.icon-btn {
-		width: 26px;
-		height: 26px;
-		padding: 0;
-		justify-content: center;
-		border: none;
-		background: transparent;
-		color: var(--ink-3);
-		border-radius: 6px;
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		text-decoration: none;
+	/* seg / chip active states */
+	button.on {
+		background: var(--color-surface-3);
+		color: var(--color-ink);
 	}
-	.icon-btn:hover { background: var(--surface-3); color: var(--ink); }
-	.i {
-		width: 14px;
-		height: 14px;
-		stroke: currentColor;
-		fill: none;
-		stroke-width: 1.6;
-		stroke-linecap: round;
-		stroke-linejoin: round;
+	.on-count {
+		color: var(--color-ink-3);
 	}
-	.i-sm { width: 12px; height: 12px; }
-
-	.empty {
-		padding: 60px 20px;
-		text-align: center;
-		color: var(--ink-3);
-		border: 1px dashed var(--hairline-soft);
-		border-radius: 12px;
+	/* group header with no bottom border when collapsed */
+	header.no-border {
+		border-bottom: none;
+	}
+	/* done row strikethrough decoration color */
+	.done-row .line-through {
+		text-decoration-color: var(--color-ink-4);
 	}
 </style>

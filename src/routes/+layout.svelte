@@ -20,21 +20,9 @@
 	);
 </script>
 
-<div class="app">
+<div class="grid min-h-screen grid-cols-[220px_1fr]">
 	<Sidebar {pinnedSubjects} {term} />
-	<main>
+	<main class="overflow-hidden">
 		{@render children()}
 	</main>
 </div>
-
-<style>
-	.app {
-		display: grid;
-		grid-template-columns: 220px 1fr;
-		min-height: 100vh;
-	}
-	main {
-		min-height: 100vh;
-		overflow: hidden;
-	}
-</style>

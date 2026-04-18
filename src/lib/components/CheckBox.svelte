@@ -26,51 +26,24 @@
 </script>
 
 <button
-	class="chk"
+	class="inline-flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-sm border-[1.3px] border-hairline bg-transparent p-0 transition-all duration-150"
 	class:done
 	aria-label="完了"
 	aria-pressed={done}
 	onclick={toggle}
 	type="button"
 >
-	<svg viewBox="0 0 12 12" aria-hidden="true">
+	<svg viewBox="0 0 12 12" aria-hidden="true" class="size-2.5 fill-none stroke-bg stroke-[2.4] [stroke-linecap:round] [stroke-linejoin:round]" class:hidden={!done}>
 		<path d="m2.5 6 2.5 2.5 4.5-5" />
 	</svg>
 </button>
 
 <style>
-	.chk {
-		width: 16px;
-		height: 16px;
-		border-radius: 4px;
-		border: 1.3px solid var(--hairline);
-		background: transparent;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		cursor: pointer;
-		flex-shrink: 0;
-		transition: 0.15s;
-		padding: 0;
+	button.done {
+		background: var(--color-prog-high);
+		border-color: var(--color-prog-high);
 	}
-	.chk:hover {
-		border-color: var(--ink-3);
-	}
-	.chk.done {
-		background: var(--prog-high);
-		border-color: var(--prog-high);
-	}
-	.chk svg {
-		display: none;
-		width: 10px;
-		height: 10px;
-		stroke: var(--bg);
-		stroke-width: 2.4;
-		fill: none;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-	}
-	.chk.done svg {
-		display: block;
+	button:hover:not(.done) {
+		border-color: var(--color-ink-3);
 	}
 </style>

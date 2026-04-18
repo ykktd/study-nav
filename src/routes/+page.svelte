@@ -59,44 +59,51 @@
 	<title>study-nav — ダッシュボード</title>
 </svelte:head>
 
-<div class="main-inner">
+<div class="w-full max-w-[1280px] px-12 pt-8.5 pb-20">
 	<!-- topbar -->
-	<div class="topbar">
+	<div class="mb-7 flex items-end justify-between gap-6">
 		<div>
-			<div class="crumbs mono">/ dashboard</div>
-			<h1>今学期の科目</h1>
+			<div class="mono mb-2 text-[12px] tracking-[0.06em] text-ink-4">/ dashboard</div>
+			<h1 class="m-0 text-[26px] font-semibold tracking-[-0.01em]">今学期の科目</h1>
 			{#if daysToNext !== null}
-				<div class="sub">
-					試験まで <span class="mono" style="color:var(--ink)">{daysToNext}</span> 日。過去問の進捗を確認しましょう。
+				<div class="mt-1.5 text-[13.5px] text-ink-3">
+					試験まで <span class="mono" style="color:var(--color-ink)">{daysToNext}</span> 日。過去問の進捗を確認しましょう。
 				</div>
 			{/if}
 		</div>
-		<div class="actions">
-			<button class="btn btn-primary" type="button" onclick={openModal}>
-				<span class="plus">＋</span>科目を追加
+		<div class="flex items-center gap-2.5">
+			<button
+				class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-[14px] py-[9px] text-[13.5px] font-[inherit] text-bg no-underline hover:bg-ink-hover"
+				type="button"
+				onclick={openModal}
+			>
+				<span class="mono text-[15px] leading-none">＋</span>科目を追加
 			</button>
 		</div>
 	</div>
 
 	<!-- summary -->
-	<section class="summary" aria-label="学期サマリー">
-		<div class="cell">
-			<div class="k">履修科目</div>
-			<div class="v mono">{data.subjects.length}<span class="unit">科目</span></div>
-		</div>
-		<div class="cell">
-			<div class="k">過去問 進捗</div>
-			<div class="v mono">{data.donePastExams} / {data.totalPastExams}<span class="unit"> 問</span></div>
-		</div>
-		<div class="cell">
-			<div class="k">完了科目</div>
-			<div class="v mono">{counts.done}<span class="unit">科目</span></div>
-		</div>
-		<div class="cell">
-			<div class="k">直近の試験</div>
-			<div class="v">
+	<section
+		class="mb-7 grid grid-cols-4 overflow-hidden rounded-xl border border-hairline-soft bg-surface-1"
+		aria-label="学期サマリー"
+	>
+		{#each [
+			{ k: '履修科目', v: `${data.subjects.length}`, unit: '科目' },
+			{ k: '過去問 進捗', v: `${data.donePastExams} / ${data.totalPastExams}`, unit: ' 問' },
+			{ k: '完了科目', v: `${counts.done}`, unit: '科目' }
+		] as cell}
+			<div class="border-r border-hairline-soft px-5 py-4">
+				<div class="text-[11px] uppercase tracking-[0.1em] text-ink-4">{cell.k}</div>
+				<div class="mono mt-1.5 text-[22px] font-medium tracking-[-0.01em]">
+					{cell.v}<span class="ml-1 text-[13px] font-normal text-ink-3">{cell.unit}</span>
+				</div>
+			</div>
+		{/each}
+		<div class="px-5 py-4">
+			<div class="text-[11px] uppercase tracking-[0.1em] text-ink-4">直近の試験</div>
+			<div class="mt-1.5 text-[22px] font-medium tracking-[-0.01em]">
 				{#if data.nextExam}
-					{data.nextExam.name}<span class="unit mono"> · {formatExamDate(data.nextExam.exam_date)}</span>
+					{data.nextExam.name}<span class="mono ml-1 text-[13px] font-normal text-ink-3"> · {formatExamDate(data.nextExam.exam_date)}</span>
 				{:else}
 					—
 				{/if}
@@ -105,8 +112,8 @@
 	</section>
 
 	<!-- filters -->
-	<div class="filters">
-		<div class="chips" role="tablist">
+	<div class="mb-[14px] flex items-center justify-between">
+		<div class="flex gap-1.5" role="tablist">
 			{#each [
 				{ key: 'all', label: 'すべて', count: counts.all },
 				{ key: 'active', label: '進行中', count: counts.active },
@@ -114,114 +121,97 @@
 				{ key: 'done', label: '完了', count: counts.done }
 			] as chip}
 				<button
-					class="chip"
+					class="cursor-pointer rounded-full border border-hairline-soft bg-transparent px-[11px] py-1.5 text-[12.5px] font-[inherit] text-ink-3"
 					class:on={filter === chip.key}
 					role="tab"
 					aria-selected={filter === chip.key}
 					onclick={() => (filter = chip.key as Filter)}
 				>
 					{chip.label}
-					<span class="mono" style="color:var(--ink-4); margin-left:4px">{chip.count}</span>
+					<span class="mono" style="color:var(--color-ink-4); margin-left:4px">{chip.count}</span>
 				</button>
 			{/each}
 		</div>
 	</div>
 
 	<!-- subject grid -->
-	<div class="grid">
+	<div class="grid grid-cols-3 gap-4 xl:grid-cols-4">
 		{#each filtered as subject (subject.id)}
-			<a href="/subjects/{subject.id}" class="card" tabindex="0">
-				<div class="card-head">
-					<div>
-						<div class="card-name">{subject.name}</div>
-						<div class="card-meta">
-							{#if subject.professor}
-								<span>{subject.professor}</span>
-							{/if}
-							{#if subject.professor && subject.day_period}
-								<span class="sep"></span>
-							{/if}
-							{#if subject.day_period}
-								<span class="mono">{subject.day_period}</span>
-							{/if}
-						</div>
-					</div>
-					{#if subject.exam_date}
-						<div class="mono" style="font-size:11px; color:var(--ink-4); white-space:nowrap">
-							試験 {formatExamDate(subject.exam_date)}
-						</div>
-					{/if}
-				</div>
-				<div class="card-bottom">
-					{#if subject.past_exam_total > 0}
-						<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
-					{:else}
-						<div class="no-exam">
-							<span class="tag">過去問 未登録</span>
-						</div>
-					{/if}
-					<div class="go">開く →</div>
-				</div>
-			</a>
+			{@render subjectCard(subject)}
 		{/each}
 
-		<button class="card card-add" type="button" onclick={openModal}>
-			<span class="plus">＋</span>
+		<button
+			class="group flex min-h-[176px] cursor-pointer flex-col items-center justify-center gap-2 rounded-card border border-dashed border-hairline-soft bg-transparent px-4.5 pt-4.5 pb-4 text-[13.5px] font-[inherit] text-ink-3 hover:border-hairline hover:bg-surface-1 hover:text-ink"
+			type="button"
+			onclick={openModal}
+		>
+			<span class="mono flex size-[34px] items-center justify-center rounded-lg border border-hairline-soft text-[20px] leading-none">＋</span>
 			<span>科目を追加</span>
 		</button>
 	</div>
 
 	<!-- archive section -->
 	{#if data.archived.length > 0}
-		<div class="section-title">アーカイブ（前学期）</div>
-		<div class="grid">
+		<div class="mt-8 mb-3 flex items-center gap-[10px] text-[12px] uppercase tracking-[0.14em] text-ink-4 after:h-px after:flex-1 after:bg-hairline-soft after:content-['']">
+			アーカイブ（前学期）
+		</div>
+		<div class="grid grid-cols-3 gap-4 xl:grid-cols-4">
 			{#each data.archived as subject (subject.id)}
-				<a href="/subjects/{subject.id}" class="card" tabindex="0">
-					<div class="card-head">
-						<div>
-							<div class="card-name">{subject.name}</div>
-							<div class="card-meta">
-								{#if subject.professor}
-									<span>{subject.professor}</span>
-								{/if}
-								{#if subject.professor && subject.day_period}
-									<span class="sep"></span>
-								{/if}
-								{#if subject.day_period}
-									<span class="mono">— 前学期</span>
-								{/if}
-							</div>
-						</div>
-						{#if subject.exam_date}
-							<div class="mono" style="font-size:11px; color:var(--ink-4); white-space:nowrap">
-								試験 {formatExamDate(subject.exam_date)}
-							</div>
-						{/if}
-					</div>
-					<div class="card-bottom">
-						{#if subject.past_exam_total > 0}
-							<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
-						{:else}
-							<div class="no-exam">
-								<span class="tag">過去問 未登録</span>
-							</div>
-						{/if}
-						<div class="go">開く →</div>
-					</div>
-				</a>
+				{@render subjectCard(subject, true)}
 			{/each}
 		</div>
 	{/if}
 </div>
 
+{#snippet subjectCard(subject: SubjectWithProgress, archived = false)}
+	<a
+		href="/subjects/{subject.id}"
+		class="group flex min-h-[176px] cursor-pointer flex-col rounded-card border border-hairline-soft bg-surface-1 px-4.5 pt-4.5 pb-4 text-inherit no-underline transition-[border-color,background] duration-150 hover:border-hairline hover:bg-surface-2"
+		tabindex="0"
+	>
+		<div class="mb-auto flex items-start justify-between gap-3">
+			<div>
+				<div class="text-[15.5px] font-semibold leading-[1.35] tracking-[0.01em] text-ink">{subject.name}</div>
+				<div class="mt-1.5 flex items-center gap-2 text-[12px] text-ink-4">
+					{#if subject.professor}
+						<span>{subject.professor}</span>
+					{/if}
+					{#if subject.professor && subject.day_period}
+						<span class="size-[3px] rounded-full bg-ink-4 opacity-60"></span>
+					{/if}
+					{#if subject.day_period}
+						<span class="mono">{archived ? '— 前学期' : subject.day_period}</span>
+					{/if}
+				</div>
+			</div>
+			{#if subject.exam_date}
+				<div class="mono whitespace-nowrap text-[11px] text-ink-4">
+					試験 {formatExamDate(subject.exam_date)}
+				</div>
+			{/if}
+		</div>
+		<div class="mt-[18px] flex items-end justify-between gap-3">
+			{#if subject.past_exam_total > 0}
+				<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
+			{:else}
+				<div class="flex flex-col items-start justify-end gap-1.5 text-[11.5px] text-ink-4">
+					<span class="inline-flex items-center gap-1.5 rounded-md border border-dashed border-hairline px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[0.02em] text-ink-3">過去問 未登録</span>
+				</div>
+			{/if}
+			<div class="mono mb-1.5 -translate-x-1 self-end text-[13px] text-ink-3 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">開く →</div>
+		</div>
+	</a>
+{/snippet}
+
 <!-- Add Subject Modal -->
-<dialog bind:this={modalRef} class="modal" onclose={closeModal}>
-	<div class="modal-inner">
-		<div class="modal-head">
-			<h2>科目を追加</h2>
-			<button class="close-btn" onclick={closeModal} aria-label="閉じる">✕</button>
+<dialog bind:this={modalRef} class="modal m-auto w-full max-w-[420px] rounded-[14px] border border-hairline bg-surface-2 p-0 text-ink" onclose={closeModal}>
+	<div class="px-7 py-6">
+		<div class="mb-5 flex items-center justify-between">
+			<h2 class="m-0 text-[16px] font-semibold">科目を追加</h2>
+			<button class="cursor-pointer border-none bg-transparent px-2 py-1 text-[14px] text-ink-3 hover:text-ink" onclick={closeModal} aria-label="閉じる">✕</button>
 		</div>
 		<form
+			class="flex flex-col gap-[14px]"
 			method="POST"
 			action="?/addSubject"
 			use:enhance={() => {
@@ -233,389 +223,40 @@
 				};
 			}}
 		>
-			<label>
-				<span>科目名 <span class="required">*</span></span>
-				<input name="name" type="text" placeholder="例: 線形代数 II" required />
+			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+				<span class="tracking-[0.04em]">科目名 <span class="text-prog-low">*</span></span>
+				<input name="name" type="text" placeholder="例: 線形代数 II" required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label>
-				<span>担当教員</span>
-				<input name="professor" type="text" placeholder="例: 佐藤 健" />
+			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+				<span class="tracking-[0.04em]">担当教員</span>
+				<input name="professor" type="text" placeholder="例: 佐藤 健" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label>
-				<span>曜限</span>
-				<input name="day_period" type="text" placeholder="例: 月1" />
+			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+				<span class="tracking-[0.04em]">曜限</span>
+				<input name="day_period" type="text" placeholder="例: 月1" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label>
-				<span>試験日</span>
-				<input name="exam_date" type="date" />
+			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+				<span class="tracking-[0.04em]">試験日</span>
+				<input name="exam_date" type="date" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
 			<input name="term" type="hidden" value={data.term} />
-			<div class="modal-actions">
-				<button type="button" class="btn" onclick={closeModal}>キャンセル</button>
-				<button type="submit" class="btn btn-primary">追加</button>
+			<div class="mt-2 flex justify-end gap-2">
+				<button type="button" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-hairline bg-surface-1 px-[14px] py-[9px] text-[13.5px] font-[inherit] text-ink hover:bg-surface-2" onclick={closeModal}>キャンセル</button>
+				<button type="submit" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-[14px] py-[9px] text-[13.5px] font-[inherit] text-bg hover:bg-ink-hover">追加</button>
 			</div>
 		</form>
 	</div>
 </dialog>
 
 <style>
-	.main-inner {
-		padding: 34px 48px 80px;
-		max-width: 1280px;
-		width: 100%;
+	/* chip active state */
+	button.on {
+		background: var(--color-surface-2);
+		color: var(--color-ink);
+		border-color: var(--color-hairline);
 	}
-	.topbar {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		margin-bottom: 28px;
-		gap: 24px;
-	}
-	.crumbs {
-		font-size: 12px;
-		color: var(--ink-4);
-		letter-spacing: 0.06em;
-		margin-bottom: 8px;
-	}
-	h1 {
-		font-size: 26px;
-		font-weight: 600;
-		margin: 0;
-		letter-spacing: -0.01em;
-	}
-	.sub {
-		color: var(--ink-3);
-		font-size: 13.5px;
-		margin-top: 6px;
-	}
-	.actions {
-		display: flex;
-		gap: 10px;
-		align-items: center;
-	}
-	.btn {
-		font: inherit;
-		border: 1px solid var(--hairline);
-		background: var(--surface-1);
-		color: var(--ink);
-		padding: 9px 14px;
-		border-radius: var(--radius-ctrl);
-		cursor: pointer;
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		font-size: 13.5px;
-		text-decoration: none;
-	}
-	.btn:hover {
-		background: var(--surface-2);
-	}
-	.btn-primary {
-		background: var(--ink);
-		color: var(--bg);
-		border-color: var(--ink);
-	}
-	.btn-primary:hover {
-		background: oklch(0.88 0.005 250);
-	}
-	.plus {
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 15px;
-		line-height: 1;
-	}
-
-	/* summary */
-	.summary {
-		display: grid;
-		grid-template-columns: repeat(4, 1fr);
-		border: 1px solid var(--hairline-soft);
-		border-radius: 12px;
-		background: var(--surface-1);
-		margin-bottom: 28px;
-		overflow: hidden;
-	}
-	.cell {
-		padding: 16px 20px;
-		border-right: 1px solid var(--hairline-soft);
-	}
-	.cell:last-child {
-		border-right: none;
-	}
-	.k {
-		font-size: 11px;
-		color: var(--ink-4);
-		letter-spacing: 0.1em;
-		text-transform: uppercase;
-	}
-	.v {
-		font-size: 22px;
-		font-weight: 500;
-		margin-top: 6px;
-		letter-spacing: -0.01em;
-	}
-	.unit {
-		font-size: 13px;
-		color: var(--ink-3);
-		margin-left: 4px;
-		font-weight: 400;
-	}
-
-	/* filters */
-	.filters {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 14px;
-	}
-	.chips {
-		display: flex;
-		gap: 6px;
-	}
-	.chip {
-		font: inherit;
-		font-size: 12.5px;
-		padding: 6px 11px;
-		border-radius: 999px;
-		border: 1px solid var(--hairline-soft);
-		background: transparent;
-		color: var(--ink-3);
-		cursor: pointer;
-	}
-	.chip.on {
-		background: var(--surface-2);
-		color: var(--ink);
-		border-color: var(--hairline);
-	}
-
-	/* grid */
-	.grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 16px;
-	}
-	@media (min-width: 1200px) {
-		.grid {
-			grid-template-columns: repeat(4, 1fr);
-		}
-	}
-
-	/* card */
-	.card {
-		background: var(--surface-1);
-		border: 1px solid var(--hairline-soft);
-		border-radius: var(--radius-card);
-		padding: 18px 18px 16px;
-		display: flex;
-		flex-direction: column;
-		min-height: 176px;
-		transition:
-			border-color 0.15s ease,
-			background 0.15s ease;
-		cursor: pointer;
-		text-decoration: none;
-		color: inherit;
-	}
-	.card:hover {
-		border-color: var(--hairline);
-		background: var(--surface-2);
-	}
-	.card:hover .go {
-		opacity: 1;
-		transform: translateX(0);
-	}
-	.card-head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 12px;
-		margin-bottom: auto;
-	}
-	.card-name {
-		font-size: 15.5px;
-		font-weight: 600;
-		letter-spacing: 0.01em;
-		line-height: 1.35;
-		color: var(--ink);
-	}
-	.card-meta {
-		margin-top: 6px;
-		font-size: 12px;
-		color: var(--ink-4);
-		display: flex;
-		gap: 8px;
-		align-items: center;
-	}
-	.sep {
-		width: 3px;
-		height: 3px;
-		border-radius: 50%;
-		background: var(--ink-4);
-		opacity: 0.6;
-	}
-	.card-bottom {
-		display: flex;
-		align-items: flex-end;
-		justify-content: space-between;
-		margin-top: 18px;
-		gap: 12px;
-	}
-	.no-exam {
-		display: flex;
-		flex-direction: column;
-		gap: 6px;
-		align-items: flex-start;
-		justify-content: flex-end;
-		color: var(--ink-4);
-		font-size: 11.5px;
-	}
-	.tag {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		padding: 4px 8px;
-		border-radius: 6px;
-		border: 1px dashed var(--hairline);
-		color: var(--ink-3);
-		font-size: 11px;
-		font-family: 'IBM Plex Mono', monospace;
-		letter-spacing: 0.02em;
-	}
-	.go {
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 13px;
-		color: var(--ink-3);
-		opacity: 0;
-		transform: translateX(-4px);
-		transition: 0.2s ease;
-		align-self: flex-end;
-		margin-bottom: 6px;
-	}
-
-	/* add card */
-	.card-add {
-		border-style: dashed;
-		border-color: var(--hairline-soft);
-		background: transparent;
-		color: var(--ink-3);
-		align-items: center;
-		justify-content: center;
-		display: flex;
-		flex-direction: column;
-		gap: 8px;
-		font: inherit;
-		font-size: 13.5px;
-	}
-	.card-add:hover {
-		border-color: var(--hairline);
-		background: var(--surface-1);
-		color: var(--ink);
-	}
-	.card-add .plus {
-		font-family: 'IBM Plex Mono', monospace;
-		font-size: 20px;
-		line-height: 1;
-		width: 34px;
-		height: 34px;
-		border-radius: 8px;
-		border: 1px solid var(--hairline-soft);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	/* section title */
-	.section-title {
-		font-size: 12px;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: var(--ink-4);
-		margin: 32px 0 12px;
-		display: flex;
-		align-items: center;
-		gap: 10px;
-	}
-	.section-title::after {
-		content: '';
-		flex: 1;
-		height: 1px;
-		background: var(--hairline-soft);
-	}
-
-	/* modal */
-	.modal {
-		background: var(--surface-2);
-		border: 1px solid var(--hairline);
-		border-radius: 14px;
-		padding: 0;
-		color: var(--ink);
-		max-width: 420px;
-		width: 100%;
-		margin: auto;
-	}
+	/* modal backdrop — no Tailwind utility */
 	.modal::backdrop {
 		background: rgba(0, 0, 0, 0.5);
-	}
-	.modal-inner {
-		padding: 24px 28px;
-	}
-	.modal-head {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		margin-bottom: 20px;
-	}
-	.modal-head h2 {
-		font-size: 16px;
-		font-weight: 600;
-		margin: 0;
-	}
-	.close-btn {
-		background: transparent;
-		border: none;
-		color: var(--ink-3);
-		cursor: pointer;
-		font-size: 14px;
-		padding: 4px 8px;
-	}
-	.close-btn:hover {
-		color: var(--ink);
-	}
-	form {
-		display: flex;
-		flex-direction: column;
-		gap: 14px;
-	}
-	label {
-		display: flex;
-		flex-direction: column;
-		gap: 5px;
-		font-size: 12px;
-		color: var(--ink-3);
-	}
-	label span {
-		letter-spacing: 0.04em;
-	}
-	.required {
-		color: var(--prog-low);
-	}
-	input[type='text'],
-	input[type='date'] {
-		background: var(--surface-3);
-		border: 1px solid var(--hairline-soft);
-		border-radius: var(--radius-ctrl);
-		color: var(--ink);
-		padding: 9px 12px;
-		font: inherit;
-		font-size: 13.5px;
-		outline: none;
-	}
-	input:focus {
-		border-color: var(--hairline);
-	}
-	.modal-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 8px;
-		margin-top: 8px;
 	}
 </style>
