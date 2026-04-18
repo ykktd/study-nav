@@ -45,15 +45,12 @@
 	const daysToNext = $derived(daysUntil(data.nextExam?.exam_date ?? null));
 
 	// Modal state
-	let showModal = $state(false);
 	let modalRef = $state<HTMLDialogElement | null>(null);
 
 	function openModal() {
-		showModal = true;
 		modalRef?.showModal();
 	}
 	function closeModal() {
-		showModal = false;
 		modalRef?.close();
 	}
 </script>
@@ -553,6 +550,7 @@
 		color: var(--ink);
 		max-width: 420px;
 		width: 100%;
+		margin: auto;
 	}
 	.modal::backdrop {
 		background: rgba(0, 0, 0, 0.5);

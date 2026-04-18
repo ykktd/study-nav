@@ -342,19 +342,16 @@
 	.summary {
 		display: grid;
 		grid-template-columns: 1.2fr 1fr 1fr 1fr;
-		border: 1px solid var(--hairline-soft);
-		border-radius: 12px;
-		background: var(--surface-1);
 		margin-bottom: 26px;
-		overflow: hidden;
 	}
 	.cell {
-		padding: 18px 22px;
+		padding: 18px 22px 18px 0;
 		border-right: 1px solid var(--hairline-soft);
 		display: flex;
 		align-items: center;
 		gap: 16px;
 	}
+	.cell:first-child { padding-left: 0; }
 	.cell:last-child { border-right: none; }
 	.cell-text { flex: 1; }
 	.k {

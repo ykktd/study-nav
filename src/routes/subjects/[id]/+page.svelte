@@ -724,6 +724,7 @@
 		color: var(--ink);
 		max-width: 420px;
 		width: 100%;
+		margin: auto;
 	}
 	.modal::backdrop {
 		background: rgba(0, 0, 0, 0.5);

@@ -21,7 +21,7 @@
 </script>
 
 <div
-	class="ring"
+	class="ring-wrap"
 	data-state={state}
 	style="--size:{size}px; --stroke:{stroke}px"
 >
@@ -45,13 +45,13 @@
 </div>
 
 <style>
-	.ring {
+	.ring-wrap {
 		width: var(--size);
 		height: var(--size);
 		position: relative;
 		flex-shrink: 0;
 	}
-	.ring svg {
+	.ring-wrap svg {
 		width: 100%;
 		height: 100%;
 	}
@@ -64,16 +64,16 @@
 			stroke-dashoffset 0.6s ease,
 			stroke 0.3s ease;
 	}
-	.ring[data-state='low'] .bar {
+	.ring-wrap[data-state='low'] .bar {
 		stroke: var(--prog-low);
 	}
-	.ring[data-state='mid'] .bar {
+	.ring-wrap[data-state='mid'] .bar {
 		stroke: var(--prog-mid);
 	}
-	.ring[data-state='high'] .bar {
+	.ring-wrap[data-state='high'] .bar {
 		stroke: var(--prog-high);
 	}
-	.ring[data-state='done'] .bar {
+	.ring-wrap[data-state='done'] .bar {
 		stroke: var(--prog-high);
 	}
 	.ring-label {
