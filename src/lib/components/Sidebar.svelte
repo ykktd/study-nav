@@ -31,11 +31,11 @@
 	<nav class="flex flex-col gap-0.5" aria-label="メインナビゲーション">
 		<div class="my-1 px-2.5 text-[10.5px] uppercase tracking-[0.14em] text-ink-4">Workspace</div>
 		<a href="/" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-ink-2 no-underline" class:active={isActive('/')}>
-			<span class="size-1.5 shrink-0 rounded-full" class:active-dot={isActive('/')}></span>
+			<span class="nav-dot size-1.5 shrink-0 rounded-full" class:active-dot={isActive('/')}></span>
 			ダッシュボード
 		</a>
 		<a href="/past-exams" class="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] text-ink-2 no-underline" class:active={isActive('/past-exams')}>
-			<span class="size-1.5 shrink-0 rounded-full" class:active-dot={isActive('/past-exams')}></span>
+			<span class="nav-dot size-1.5 shrink-0 rounded-full" class:active-dot={isActive('/past-exams')}></span>
 			過去問一覧
 		</a>
 
@@ -75,7 +75,7 @@
 	.active-dot {
 		background: var(--color-prog-high);
 	}
-	span:not(.active-dot) {
+	.nav-dot {
 		background: var(--color-ink-4);
 	}
 </style>

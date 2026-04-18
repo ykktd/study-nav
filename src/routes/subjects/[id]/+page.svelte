@@ -242,7 +242,7 @@
 {#snippet categorySection(cat: 'past_exam' | 'lecture' | 'other', label: string, items: Resource[])}
 	<div class="mt-4.5 first:mt-0">
 		<div class="mb-2 flex items-center justify-between px-1">
-			<div class="flex items-center gap-2 text-[11.5px] uppercase tracking-[0.14em] text-ink-3">
+			<div class="flex items-center gap-2 text-[11.5px] uppercase tracking-[0.14em] text-ink-2">
 				{label}
 				{#if cat === 'past_exam'}
 					<span class="mono rounded bg-surface-2 px-1.5 py-px text-[10.5px] text-ink-4">{pastExamDone} / {pastExamTotal}</span>
@@ -251,7 +251,7 @@
 				{/if}
 			</div>
 			<button
-				class="inline-flex cursor-pointer items-center gap-1.25 border-none bg-transparent font-[inherit] text-[12px] text-ink-3 hover:text-ink"
+				class="inline-flex cursor-pointer items-center gap-1.25 border-none bg-transparent font-[inherit] text-[12px] text-ink-2 hover:text-ink"
 				type="button"
 				onclick={() => openAddModal(cat)}
 			>
