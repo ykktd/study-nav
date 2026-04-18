@@ -20,7 +20,7 @@ export const GET: RequestHandler = async ({ url, locals, cookies }) => {
   if (code) {
     const { data, error } = await locals.supabase.auth.exchangeCodeForSession(code);
     if (error) throw failRedirect(error.message);
-    if (data.session?.provider_token) {
+    if (data.session?.provider_token && url.searchParams.get('drive') === '1') {
       cookies.set('drive_tok', data.session.provider_token, {
         path: '/',
         maxAge: 3500,

@@ -88,9 +88,8 @@
 		return m ? decodeURIComponent(m[1]) : null;
 	}
 
-	async function getDriveToken(): Promise<string | null> {
-		const { data: sessionData } = await supabase.auth.getSession();
-		return sessionData.session?.provider_token ?? getDriveTokenFromCookie();
+	function getDriveToken(): string | null {
+		return getDriveTokenFromCookie();
 	}
 
 	async function fetchDriveName(fileId: string, token: string): Promise<string | null> {
@@ -111,7 +110,7 @@
 		const fileId = extractDriveFileId(singleUrl);
 		if (!fileId || singleName) return;
 		fetchingName = true;
-		const token = await getDriveToken();
+		const token = getDriveToken();
 		if (token) {
 			const name = await fetchDriveName(fileId, token);
 			if (name && !singleName) singleName = name;
@@ -123,7 +122,7 @@
 		const urls = bulkUrlsText.split('\n').map((u) => u.trim()).filter(Boolean);
 		if (!urls.length) return;
 		fetchingBulk = true;
-		const token = await getDriveToken();
+		const token = getDriveToken();
 		const results = await Promise.all(
 			urls.map(async (url) => {
 				const fileId = extractDriveFileId(url);

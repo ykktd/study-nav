@@ -16,8 +16,7 @@
 		const { error: err } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
 			options: {
-				redirectTo: `${location.origin}/auth/callback`,
-				scopes: 'https://www.googleapis.com/auth/drive.readonly'
+				redirectTo: `${location.origin}/auth/callback`
 			}
 		});
 		if (err) {
