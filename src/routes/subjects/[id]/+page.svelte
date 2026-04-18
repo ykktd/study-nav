@@ -171,6 +171,12 @@
 
 	const subject = $derived(data.subject);
 	const examDays = $derived(daysUntil(subject.exam_date));
+
+	async function deleteResource(id: string) {
+		resources = resources.filter((r) => r.id !== id);
+		if (selectedResource?.id === id) selectedResource = null;
+		await supabase.from('resources').delete().eq('id', id);
+	}
 </script>
 
 <svelte:head>
@@ -536,6 +542,14 @@
 								><path d="M14 4h6v6M20 4 10 14M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5" /></svg
 							>
 						</a>
+						<button
+							type="button"
+							class="icon-btn icon-btn-sm"
+							title="削除"
+							onclick={(e) => { e.stopPropagation(); deleteResource(item.id); }}
+						>
+							<svg class="i i-sm" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+						</button>
 					</div>
 				</div>
 			{/each}
