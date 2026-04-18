@@ -15,7 +15,10 @@
 		error = '';
 		const { error: err } = await supabase.auth.signInWithOAuth({
 			provider: 'google',
-			options: { redirectTo: `${location.origin}/auth/callback` }
+			options: {
+				redirectTo: `${location.origin}/auth/callback`,
+				scopes: 'https://www.googleapis.com/auth/drive.readonly'
+			}
 		});
 		if (err) {
 			error = err.message;

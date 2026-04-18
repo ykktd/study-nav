@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
 	import { enhance } from '$app/forms';
+	import { supabase } from '$lib/supabase';
 	import ProgressRing from '$lib/components/ProgressRing.svelte';
 	import CheckBox from '$lib/components/CheckBox.svelte';
 	import type { PageData } from './$types';
 	import type { Resource } from '$lib/types';
 	import { toPreviewUrl, daysUntil } from '$lib/types';
+
+	type ResourceCategory = 'past_exam' | 'lecture' | 'other';
 
 	interface Props {
 		data: PageData;
@@ -44,14 +47,127 @@
 
 	// Add resource modal
 	let modalRef = $state<HTMLDialogElement | null>(null);
-	let defaultCategory = $state<'past_exam' | 'lecture' | 'other'>('past_exam');
+	let defaultCategory = $state<ResourceCategory>('past_exam');
+	let modalMode = $state<'single' | 'bulk'>('single');
 
-	function openAddModal(cat: 'past_exam' | 'lecture' | 'other') {
+	// Single mode state
+	let singleName = $state('');
+	let singleUrl = $state('');
+	let fetchingName = $state(false);
+
+	// Bulk mode state
+	let bulkUrlsText = $state('');
+	let bulkCategory = $state<ResourceCategory>('past_exam');
+	let bulkItems = $state<{ url: string; name: string }[]>([]);
+	let fetchingBulk = $state(false);
+	let bulkRegistering = $state(false);
+	let bulkError = $state('');
+
+	function openAddModal(cat: ResourceCategory) {
 		defaultCategory = cat;
+		modalMode = 'single';
+		singleName = '';
+		singleUrl = '';
+		bulkUrlsText = '';
+		bulkItems = [];
+		bulkCategory = cat;
+		bulkError = '';
 		modalRef?.showModal();
 	}
 	function closeModal() {
 		modalRef?.close();
+	}
+
+	function extractDriveFileId(url: string): string | null {
+		const m = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
+		return m ? m[1] : null;
+	}
+
+	function getDriveTokenFromCookie(): string | null {
+		const m = document.cookie.match(/(?:^|;\s*)drive_tok=([^;]+)/);
+		return m ? decodeURIComponent(m[1]) : null;
+	}
+
+	async function getDriveToken(): Promise<string | null> {
+		const { data: sessionData } = await supabase.auth.getSession();
+		return sessionData.session?.provider_token ?? getDriveTokenFromCookie();
+	}
+
+	async function fetchDriveName(fileId: string, token: string): Promise<string | null> {
+		try {
+			const res = await fetch(
+				`https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`,
+				{ headers: { Authorization: `Bearer ${token}` } }
+			);
+			if (!res.ok) return null;
+			const json = await res.json();
+			return json.name ?? null;
+		} catch {
+			return null;
+		}
+	}
+
+	async function handleSingleUrlBlur() {
+		const fileId = extractDriveFileId(singleUrl);
+		if (!fileId || singleName) return;
+		fetchingName = true;
+		const token = await getDriveToken();
+		if (token) {
+			const name = await fetchDriveName(fileId, token);
+			if (name && !singleName) singleName = name;
+		}
+		fetchingName = false;
+	}
+
+	async function fetchBulkNames() {
+		const urls = bulkUrlsText.split('\n').map((u) => u.trim()).filter(Boolean);
+		if (!urls.length) return;
+		fetchingBulk = true;
+		const token = await getDriveToken();
+		const results = await Promise.all(
+			urls.map(async (url) => {
+				const fileId = extractDriveFileId(url);
+				let name = '';
+				if (fileId && token) {
+					name = (await fetchDriveName(fileId, token)) ?? '';
+				}
+				return { url, name };
+			})
+		);
+		bulkItems = results;
+		fetchingBulk = false;
+	}
+
+	async function registerBulk() {
+		if (bulkItems.some((i) => !i.name.trim())) {
+			bulkError = 'ファイル名が空の項目があります。入力してから登録してください。';
+			return;
+		}
+		bulkError = '';
+		bulkRegistering = true;
+		const rows = bulkItems.map((item) => ({
+			subject_id: data.subject.id,
+			name: item.name.trim(),
+			url: item.url,
+			category: bulkCategory,
+			done: false,
+			sort_order: 0
+		}));
+		const { error: err } = await supabase.from('resources').insert(rows);
+		if (err) {
+			bulkError = err.message;
+			bulkRegistering = false;
+			return;
+		}
+		const { data: newResources } = await supabase
+			.from('resources')
+			.select('*')
+			.eq('subject_id', data.subject.id)
+			.order('sort_order')
+			.order('created_at');
+		if (newResources) resources = newResources as Resource[];
+		bulkRegistering = false;
+		closeModal();
 	}
 
 	const subject = $derived(data.subject);
@@ -192,47 +308,180 @@
 </div>
 
 <!-- Add resource modal -->
-<dialog bind:this={modalRef} class="modal m-auto w-full max-w-105 rounded-card border border-hairline bg-surface-2 p-0 text-ink" onclose={closeModal}>
+<dialog bind:this={modalRef} class="modal m-auto w-full max-w-115 rounded-card border border-hairline bg-surface-2 p-0 text-ink" onclose={closeModal}>
 	<div class="px-7 py-6">
-		<div class="mb-5 flex items-center justify-between">
+		<!-- Header -->
+		<div class="mb-5 flex items-center justify-between gap-3">
 			<h2 class="m-0 text-[16px] font-semibold">リンクを追加</h2>
-			<button class="cursor-pointer border-none bg-transparent px-2 py-1 text-[14px] text-ink-3 hover:text-ink" onclick={closeModal} aria-label="閉じる">✕</button>
-		</div>
-		<form
-			class="flex flex-col gap-3.5"
-			method="POST"
-			action="?/addResource"
-			use:enhance={() => {
-				return async ({ result, update }) => {
-					if (result.type === 'success') {
-						closeModal();
-					}
-					await update({ reset: false });
-					resources = (data.resources as Resource[]).slice();
-				};
-			}}
-		>
-			<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
-				<span>名前 <span class="text-prog-low">*</span></span>
-				<input name="name" type="text" placeholder="例: 2024年度_期末試験_問題.pdf" required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
-			</label>
-			<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
-				<span>URL <span class="text-prog-low">*</span></span>
-				<input name="url" type="url" placeholder="https://..." required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
-			</label>
-			<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
-				<span>カテゴリ <span class="text-prog-low">*</span></span>
-				<select name="category" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline">
-					<option value="past_exam" selected={defaultCategory === 'past_exam'}>過去問</option>
-					<option value="lecture" selected={defaultCategory === 'lecture'}>講義資料</option>
-					<option value="other" selected={defaultCategory === 'other'}>その他</option>
-				</select>
-			</label>
-			<div class="mt-2 flex justify-end gap-2">
-				<button type="button" class="btn" onclick={closeModal}>キャンセル</button>
-				<button type="submit" class="btn btn-primary">追加</button>
+			<div class="flex items-center gap-2">
+				<!-- Mode toggle -->
+				<div class="flex rounded-[8px] border border-hairline-soft bg-surface-3 p-0.75 text-[12px]">
+					<button
+						type="button"
+						class="mode-tab"
+						class:mode-tab-active={modalMode === 'single'}
+						onclick={() => { modalMode = 'single'; }}
+					>1件追加</button>
+					<button
+						type="button"
+						class="mode-tab"
+						class:mode-tab-active={modalMode === 'bulk'}
+						onclick={() => { modalMode = 'bulk'; }}
+					>複数まとめて追加</button>
+				</div>
+				<button class="cursor-pointer border-none bg-transparent px-2 py-1 text-[14px] text-ink-3 hover:text-ink" onclick={closeModal} aria-label="閉じる">✕</button>
 			</div>
-		</form>
+		</div>
+
+		{#if modalMode === 'single'}
+			<!-- Single mode -->
+			<form
+				class="flex flex-col gap-3.5"
+				method="POST"
+				action="?/addResource"
+				use:enhance={() => {
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							singleName = '';
+							singleUrl = '';
+							closeModal();
+							const { data: newResources } = await supabase
+								.from('resources')
+								.select('*')
+								.eq('subject_id', data.subject.id)
+								.order('sort_order')
+								.order('created_at');
+							if (newResources) resources = newResources as Resource[];
+						} else {
+							await update({ reset: false });
+						}
+					};
+				}}
+			>
+				<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
+					<span>URL <span class="text-prog-low">*</span></span>
+					<input
+						name="url"
+						type="url"
+						placeholder="https://drive.google.com/file/d/..."
+						required
+						bind:value={singleUrl}
+						onblur={handleSingleUrlBlur}
+						class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline"
+					/>
+				</label>
+				<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
+					<span>
+						名前 <span class="text-prog-low">*</span>
+						{#if fetchingName}<span class="ml-1.5 text-ink-4">取得中...</span>{/if}
+					</span>
+					<input
+						name="name"
+						type="text"
+						placeholder="例: 2024年度_期末試験_問題.pdf"
+						required
+						bind:value={singleName}
+						class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline"
+					/>
+				</label>
+				<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
+					<span>カテゴリ <span class="text-prog-low">*</span></span>
+					<select name="category" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline">
+						<option value="past_exam" selected={defaultCategory === 'past_exam'}>過去問</option>
+						<option value="lecture" selected={defaultCategory === 'lecture'}>講義資料</option>
+						<option value="other" selected={defaultCategory === 'other'}>その他</option>
+					</select>
+				</label>
+				<div class="mt-2 flex justify-end gap-2">
+					<button type="button" class="btn" onclick={closeModal}>キャンセル</button>
+					<button type="submit" class="btn btn-primary">追加</button>
+				</div>
+			</form>
+		{:else}
+			<!-- Bulk mode -->
+			<div class="flex flex-col gap-3.5">
+				<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
+					<span>カテゴリ（全URLに適用）<span class="text-prog-low">*</span></span>
+					<select bind:value={bulkCategory} class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline">
+						<option value="past_exam">過去問</option>
+						<option value="lecture">講義資料</option>
+						<option value="other">その他</option>
+					</select>
+				</label>
+
+				{#if bulkItems.length === 0}
+					<!-- Step 1: URL input -->
+					<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
+						<span>URLを貼り付け（1行につき1URL）</span>
+						<textarea
+							bind:value={bulkUrlsText}
+							placeholder={"https://drive.google.com/file/d/AAA/view\nhttps://drive.google.com/file/d/BBB/view"}
+							rows={6}
+							class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13px] text-ink outline-none focus:border-hairline resize-none leading-relaxed"
+						></textarea>
+					</label>
+					<div class="flex justify-end gap-2">
+						<button type="button" class="btn" onclick={closeModal}>キャンセル</button>
+						<button
+							type="button"
+							class="btn btn-primary"
+							disabled={fetchingBulk || !bulkUrlsText.trim()}
+							onclick={fetchBulkNames}
+						>
+							{fetchingBulk ? '取得中...' : 'ファイル名を取得'}
+						</button>
+					</div>
+				{:else}
+					<!-- Step 2: Review & edit list -->
+					<div class="text-[12px] tracking-[0.04em] text-ink-3">ファイル名を確認・編集してください</div>
+					<div class="flex max-h-72 flex-col gap-1.5 overflow-y-auto pr-1">
+						{#each bulkItems as item, i (i)}
+							<div class="grid items-center gap-2 rounded-lg border border-hairline-soft bg-surface-3 px-3 py-2" style="grid-template-columns: 1fr auto">
+								<div class="flex min-w-0 flex-col gap-1">
+									<input
+										type="text"
+										bind:value={item.name}
+										placeholder="ファイル名を入力"
+										class="rounded border border-transparent bg-transparent px-1 py-0.5 font-[inherit] text-[13px] text-ink outline-none focus:border-hairline-soft focus:bg-bg"
+										class:border-prog-low={!item.name.trim()}
+									/>
+									<span class="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-ink-4">{item.url}</span>
+								</div>
+								<button
+									type="button"
+									class="icon-btn icon-btn-sm shrink-0"
+									title="削除"
+									onclick={() => { bulkItems = bulkItems.filter((_, j) => j !== i); }}
+								>
+									<svg class="i i-sm" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+								</button>
+							</div>
+						{/each}
+					</div>
+					{#if bulkError}
+						<p class="m-0 text-[12px] text-prog-low">{bulkError}</p>
+					{/if}
+					<div class="flex justify-between gap-2">
+						<button
+							type="button"
+							class="btn"
+							onclick={() => { bulkItems = []; bulkError = ''; }}
+						>URLを修正</button>
+						<div class="flex gap-2">
+							<button type="button" class="btn" onclick={closeModal}>キャンセル</button>
+							<button
+								type="button"
+								class="btn btn-primary"
+								disabled={bulkRegistering || bulkItems.length === 0}
+								onclick={registerBulk}
+							>
+								{bulkRegistering ? '登録中...' : `${bulkItems.length}件を一括登録`}
+							</button>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </dialog>
 
@@ -387,4 +636,23 @@
 
 	/* modal backdrop */
 	.modal::backdrop { background: rgba(0, 0, 0, 0.5); }
+
+	/* mode toggle tab */
+	.mode-tab {
+		padding: 4px 10px;
+		border-radius: 6px;
+		border: none;
+		background: transparent;
+		color: var(--color-ink-3);
+		cursor: pointer;
+		font: inherit;
+		font-size: 12px;
+		white-space: nowrap;
+	}
+	.mode-tab:hover { color: var(--color-ink); }
+	.mode-tab-active {
+		background: var(--color-bg);
+		color: var(--color-ink);
+		box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+	}
 </style>

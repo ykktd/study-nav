@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-export const GET: RequestHandler = async ({ url, locals }) => {
+export const GET: RequestHandler = async ({ url, locals, cookies }) => {
   const code = url.searchParams.get("code");
   const token_hash = url.searchParams.get("token_hash");
   const VALID_TYPES = ["email", "recovery", "invite"] as const;
@@ -18,8 +18,17 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     redirect(303, `/login?error=${encodeURIComponent(message)}`);
 
   if (code) {
-    const { error } = await locals.supabase.auth.exchangeCodeForSession(code);
+    const { data, error } = await locals.supabase.auth.exchangeCodeForSession(code);
     if (error) throw failRedirect(error.message);
+    if (data.session?.provider_token) {
+      cookies.set('drive_tok', data.session.provider_token, {
+        path: '/',
+        maxAge: 3500,
+        httpOnly: false,
+        sameSite: 'lax',
+        secure: url.protocol === 'https:'
+      });
+    }
   } else if (token_hash && type) {
     const { error } = await locals.supabase.auth.verifyOtp({
       token_hash,
