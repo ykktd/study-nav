@@ -30,7 +30,11 @@
 		message = '';
 
 		if (mode === 'signup') {
-			const { error: err } = await supabase.auth.signUp({ email, password });
+			const { error: err } = await supabase.auth.signUp({
+				email,
+				password,
+				options: { emailRedirectTo: `${location.origin}/auth/callback` }
+			});
 			if (err) {
 				error = err.message;
 			} else {
