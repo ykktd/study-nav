@@ -10,7 +10,7 @@
 - **科目詳細** — 過去問・講義資料・その他リソースをカテゴリ別に管理。Google Drive の資料はアプリ内プレビューに対応
 - **過去問一覧** — 全科目の過去問をまとめて確認できる横断ビュー
 - **サイドバー** — ピン留めした科目へのクイックアクセス
-- **認証** — メールアドレスへのマジックリンクによるパスワードレスログイン
+- **認証** — Googleアカウント、またはメールアドレス＋パスワードによるログイン
 - **データ分離** — RLS（行レベルセキュリティ）により、各ユーザーは自分のデータのみアクセス可能
 
 ---
@@ -84,7 +84,7 @@ Supabase Dashboard の **SQL Editor** を開き、`supabase/migrations/001_initi
 pnpm dev
 ```
 
-ブラウザで `http://localhost:5173` を開き、メールアドレスを入力してマジックリンクでログインします。
+ブラウザで `http://localhost:5173` を開き、Googleアカウントまたはメール＋パスワードでログインします。
 
 ---
 
@@ -107,7 +107,7 @@ src/
     subjects/[id]          # 科目詳細
     past-exams/            # 過去問一覧
     login/                 # ログイン
-    auth/callback/         # マジックリンクのコールバック処理
+    auth/callback/         # 認証コールバック（OAuth・メール確認）
   lib/
     components/            # Sidebar, ProgressRing, CheckBox など
     types.ts               # 型定義・ユーティリティ関数

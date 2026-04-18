@@ -36,9 +36,13 @@ export const handle: Handle = async ({ event, resolve }) => {
 		return { session, user };
 	};
 
-	// Protect all routes except /login and /auth
-	const publicPaths = ['/login', '/auth'];
-	const isPublic = publicPaths.some((p) => event.url.pathname.startsWith(p));
+	// Protect all routes except exact /login, /auth and their subroutes
+	const pathname = event.url.pathname;
+	const isPublic =
+		pathname === '/login' ||
+		pathname.startsWith('/login/') ||
+		pathname === '/auth' ||
+		pathname.startsWith('/auth/');
 
 	if (!isPublic) {
 		const { user } = await event.locals.safeGetSession();
