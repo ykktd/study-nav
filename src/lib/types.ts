@@ -3,7 +3,6 @@ export type ResourceCategory = 'past_exam' | 'lecture' | 'other';
 export interface Subject {
 	id: string;
 	name: string;
-	professor: string | null;
 	day_period: string | null;
 	exam_date: string | null; // ISO date string e.g. "2026-05-18"
 	term: string;

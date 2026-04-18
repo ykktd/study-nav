@@ -3,7 +3,6 @@ create table if not exists subjects (
   id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   name        text not null,
-  professor   text,
   day_period  text,
   exam_date   date,
   term        text not null,

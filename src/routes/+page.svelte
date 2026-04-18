@@ -173,12 +173,6 @@
 			<div>
 				<div class="text-[15.5px] font-semibold leading-[1.35] tracking-[0.01em] text-ink">{subject.name}</div>
 				<div class="mt-1.5 flex items-center gap-2 text-[12px] text-ink-4">
-					{#if subject.professor}
-						<span>{subject.professor}</span>
-					{/if}
-					{#if subject.professor && subject.day_period}
-						<span class="size-0.75 rounded-full bg-ink-4 opacity-60"></span>
-					{/if}
 					{#if subject.day_period}
 						<span class="mono">{archived ? '— 前学期' : subject.day_period}</span>
 					{/if}
@@ -226,10 +220,6 @@
 			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">科目名 <span class="text-prog-low">*</span></span>
 				<input name="name" type="text" placeholder="例: 線形代数 II" required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
-			</label>
-			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
-				<span class="tracking-[0.04em]">担当教員</span>
-				<input name="professor" type="text" placeholder="例: 佐藤 健" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
 			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">曜限</span>

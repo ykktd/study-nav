@@ -75,9 +75,6 @@
 				<h1 class="m-0 text-[24px] font-semibold tracking-[-0.01em]">{subject.name}</h1>
 			</div>
 			<div class="mt-2 flex gap-4.5 text-[12.5px] text-ink-3">
-				{#if subject.professor}
-					<div><span class="mr-1.5 tracking-[0.04em] text-ink-4">担当</span><span class="text-ink-2">{subject.professor}</span></div>
-				{/if}
 				{#if subject.day_period}
 					<div><span class="mr-1.5 tracking-[0.04em] text-ink-4">曜限</span><span class="mono text-ink-2">{subject.day_period}</span></div>
 				{/if}

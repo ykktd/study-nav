@@ -60,7 +60,6 @@ export const actions: Actions = {
 	addSubject: async ({ request, locals }) => {
 		const data = await request.formData();
 		const name = String(data.get('name') ?? '').trim();
-		const professor = String(data.get('professor') ?? '').trim() || null;
 		const day_period = String(data.get('day_period') ?? '').trim() || null;
 		const exam_date = String(data.get('exam_date') ?? '').trim() || null;
 		const term = String(data.get('term') ?? '').trim();
@@ -73,7 +72,6 @@ export const actions: Actions = {
 		const { error } = await locals.supabase.from('subjects').insert({
 			user_id: user.id,
 			name,
-			professor,
 			day_period,
 			exam_date,
 			term,

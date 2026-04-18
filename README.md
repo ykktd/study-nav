@@ -31,7 +31,7 @@
 
 ```
 subjects
-  id, user_id (→ auth.users), name, professor, day_period,
+  id, user_id (→ auth.users), name, day_period,
   exam_date, term, is_archived, pinned, sort_order, created_at
 
 resources
