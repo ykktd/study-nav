@@ -53,7 +53,7 @@
 </svelte:head>
 
 <div class="flex min-h-screen items-center justify-center bg-bg">
-	<div class="w-full max-w-[380px] rounded-2xl border border-hairline-soft bg-surface-1 px-9 py-10">
+	<div class="w-full max-w-95 rounded-2xl border border-hairline-soft bg-surface-1 px-9 py-10">
 		<div class="mb-8 flex items-center gap-2.5">
 			<div
 				class="size-6.5 shrink-0 rounded-[7px]"
@@ -95,7 +95,7 @@
 			<span>または</span>
 		</div>
 
-		<form class="flex flex-col gap-[14px]" onsubmit={(e) => { e.preventDefault(); submitEmailPassword(); }}>
+		<form class="flex flex-col gap-3.5" onsubmit={(e) => { e.preventDefault(); submitEmailPassword(); }}>
 			<label class="flex flex-col gap-1.5 text-[12.5px] text-ink-3">
 				<span>メールアドレス</span>
 				<input

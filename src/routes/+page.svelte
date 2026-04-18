@@ -59,7 +59,7 @@
 	<title>study-nav — ダッシュボード</title>
 </svelte:head>
 
-<div class="w-full max-w-[1280px] px-12 pt-8.5 pb-20">
+<div class="w-full max-w-7xl px-12 pt-8.5 pb-20">
 	<!-- topbar -->
 	<div class="mb-7 flex items-end justify-between gap-6">
 		<div>
@@ -73,7 +73,7 @@
 		</div>
 		<div class="flex items-center gap-2.5">
 			<button
-				class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-[14px] py-[9px] text-[13.5px] font-[inherit] text-bg no-underline hover:bg-ink-hover"
+				class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-[14px] py-2.25 text-[13.5px] font-[inherit] text-bg no-underline hover:bg-ink-hover"
 				type="button"
 				onclick={openModal}
 			>
@@ -93,14 +93,14 @@
 			{ k: '完了科目', v: `${counts.done}`, unit: '科目' }
 		] as cell}
 			<div class="border-r border-hairline-soft px-5 py-4">
-				<div class="text-[11px] uppercase tracking-[0.1em] text-ink-4">{cell.k}</div>
+				<div class="text-[11px] uppercase tracking-widest text-ink-4">{cell.k}</div>
 				<div class="mono mt-1.5 text-[22px] font-medium tracking-[-0.01em]">
 					{cell.v}<span class="ml-1 text-[13px] font-normal text-ink-3">{cell.unit}</span>
 				</div>
 			</div>
 		{/each}
 		<div class="px-5 py-4">
-			<div class="text-[11px] uppercase tracking-[0.1em] text-ink-4">直近の試験</div>
+			<div class="text-[11px] uppercase tracking-widest text-ink-4">直近の試験</div>
 			<div class="mt-1.5 text-[22px] font-medium tracking-[-0.01em]">
 				{#if data.nextExam}
 					{data.nextExam.name}<span class="mono ml-1 text-[13px] font-normal text-ink-3"> · {formatExamDate(data.nextExam.exam_date)}</span>
@@ -112,7 +112,7 @@
 	</section>
 
 	<!-- filters -->
-	<div class="mb-[14px] flex items-center justify-between">
+	<div class="mb-3.5 flex items-center justify-between">
 		<div class="flex gap-1.5" role="tablist">
 			{#each [
 				{ key: 'all', label: 'すべて', count: counts.all },
@@ -141,18 +141,18 @@
 		{/each}
 
 		<button
-			class="group flex min-h-[176px] cursor-pointer flex-col items-center justify-center gap-2 rounded-card border border-dashed border-hairline-soft bg-transparent px-4.5 pt-4.5 pb-4 text-[13.5px] font-[inherit] text-ink-3 hover:border-hairline hover:bg-surface-1 hover:text-ink"
+			class="group flex min-h-44 cursor-pointer flex-col items-center justify-center gap-2 rounded-card border border-dashed border-hairline-soft bg-transparent px-4.5 pt-4.5 pb-4 text-[13.5px] font-[inherit] text-ink-3 hover:border-hairline hover:bg-surface-1 hover:text-ink"
 			type="button"
 			onclick={openModal}
 		>
-			<span class="mono flex size-[34px] items-center justify-center rounded-lg border border-hairline-soft text-[20px] leading-none">＋</span>
+			<span class="mono flex size-8.5 items-center justify-center rounded-lg border border-hairline-soft text-[20px] leading-none">＋</span>
 			<span>科目を追加</span>
 		</button>
 	</div>
 
 	<!-- archive section -->
 	{#if data.archived.length > 0}
-		<div class="mt-8 mb-3 flex items-center gap-[10px] text-[12px] uppercase tracking-[0.14em] text-ink-4 after:h-px after:flex-1 after:bg-hairline-soft after:content-['']">
+		<div class="mt-8 mb-3 flex items-center gap-2.5 text-[12px] uppercase tracking-[0.14em] text-ink-4 after:h-px after:flex-1 after:bg-hairline-soft after:content-['']">
 			アーカイブ（前学期）
 		</div>
 		<div class="grid grid-cols-3 gap-4 xl:grid-cols-4">
@@ -166,7 +166,7 @@
 {#snippet subjectCard(subject: SubjectWithProgress, archived = false)}
 	<a
 		href="/subjects/{subject.id}"
-		class="group flex min-h-[176px] cursor-pointer flex-col rounded-card border border-hairline-soft bg-surface-1 px-4.5 pt-4.5 pb-4 text-inherit no-underline transition-[border-color,background] duration-150 hover:border-hairline hover:bg-surface-2"
+		class="group flex min-h-44 cursor-pointer flex-col rounded-card border border-hairline-soft bg-surface-1 px-4.5 pt-4.5 pb-4 text-inherit no-underline transition-[border-color,background] duration-150 hover:border-hairline hover:bg-surface-2"
 		tabindex="0"
 	>
 		<div class="mb-auto flex items-start justify-between gap-3">
@@ -177,7 +177,7 @@
 						<span>{subject.professor}</span>
 					{/if}
 					{#if subject.professor && subject.day_period}
-						<span class="size-[3px] rounded-full bg-ink-4 opacity-60"></span>
+						<span class="size-0.75 rounded-full bg-ink-4 opacity-60"></span>
 					{/if}
 					{#if subject.day_period}
 						<span class="mono">{archived ? '— 前学期' : subject.day_period}</span>
@@ -190,7 +190,7 @@
 				</div>
 			{/if}
 		</div>
-		<div class="mt-[18px] flex items-end justify-between gap-3">
+		<div class="mt-4.5 flex items-end justify-between gap-3">
 			{#if subject.past_exam_total > 0}
 				<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
 			{:else}
@@ -204,14 +204,14 @@
 {/snippet}
 
 <!-- Add Subject Modal -->
-<dialog bind:this={modalRef} class="modal m-auto w-full max-w-[420px] rounded-[14px] border border-hairline bg-surface-2 p-0 text-ink" onclose={closeModal}>
+<dialog bind:this={modalRef} class="modal m-auto w-full max-w-105 rounded-card border border-hairline bg-surface-2 p-0 text-ink" onclose={closeModal}>
 	<div class="px-7 py-6">
 		<div class="mb-5 flex items-center justify-between">
 			<h2 class="m-0 text-[16px] font-semibold">科目を追加</h2>
 			<button class="cursor-pointer border-none bg-transparent px-2 py-1 text-[14px] text-ink-3 hover:text-ink" onclick={closeModal} aria-label="閉じる">✕</button>
 		</div>
 		<form
-			class="flex flex-col gap-[14px]"
+			class="flex flex-col gap-3.5"
 			method="POST"
 			action="?/addSubject"
 			use:enhance={() => {
@@ -223,26 +223,26 @@
 				};
 			}}
 		>
-			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">科目名 <span class="text-prog-low">*</span></span>
-				<input name="name" type="text" placeholder="例: 線形代数 II" required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
+				<input name="name" type="text" placeholder="例: 線形代数 II" required class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">担当教員</span>
-				<input name="professor" type="text" placeholder="例: 佐藤 健" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
+				<input name="professor" type="text" placeholder="例: 佐藤 健" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">曜限</span>
-				<input name="day_period" type="text" placeholder="例: 月1" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
+				<input name="day_period" type="text" placeholder="例: 月1" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
-			<label class="flex flex-col gap-[5px] text-[12px] text-ink-3">
+			<label class="flex flex-col gap-1.25 text-[12px] text-ink-3">
 				<span class="tracking-[0.04em]">試験日</span>
-				<input name="exam_date" type="date" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-[9px] font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
+				<input name="exam_date" type="date" class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline" />
 			</label>
 			<input name="term" type="hidden" value={data.term} />
 			<div class="mt-2 flex justify-end gap-2">
-				<button type="button" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-hairline bg-surface-1 px-[14px] py-[9px] text-[13.5px] font-[inherit] text-ink hover:bg-surface-2" onclick={closeModal}>キャンセル</button>
-				<button type="submit" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-[14px] py-[9px] text-[13.5px] font-[inherit] text-bg hover:bg-ink-hover">追加</button>
+				<button type="button" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-hairline bg-surface-1 px-3.5 py-2.25 text-[13.5px] font-[inherit] text-ink hover:bg-surface-2" onclick={closeModal}>キャンセル</button>
+				<button type="submit" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-3.5 py-2.25 text-[13.5px] font-[inherit] text-bg hover:bg-ink-hover">追加</button>
 			</div>
 		</form>
 	</div>
