@@ -106,6 +106,7 @@ src/
     +page                  # ダッシュボード
     subjects/[id]          # 科目詳細
     past-exams/            # 過去問一覧
+    account/               # アカウント設定・Google Drive連携
     login/                 # ログイン
     auth/callback/         # 認証コールバック（OAuth・メール確認）
   lib/
