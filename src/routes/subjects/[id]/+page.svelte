@@ -224,9 +224,20 @@
 	</header>
 
 	<!-- body -->
-	<div class="flex flex-1 min-h-0" style="height: calc(100vh - 140px)" class:grid={previewOpen} class:preview-grid={previewOpen}>
+	<div
+		class="flex min-h-0"
+		class:flex-1={previewOpen}
+		class:grid={previewOpen}
+		class:preview-grid={previewOpen}
+		style={previewOpen ? "height: calc(100vh - 140px)" : ""}
+	>
 		<!-- left: resource list -->
-		<section class="overflow-y-auto border-r border-hairline-soft px-10 pt-5.5 pb-10" style="padding-left:40px; padding-right:28px">
+		<section
+			class="flex-1 min-w-0 overflow-y-auto border-hairline-soft pt-5.5 pb-10"
+			class:border-r={previewOpen}
+			class:resources-grid={!previewOpen}
+			style="padding-left:40px; padding-right:28px"
+		>
 			{@render categorySection('past_exam', '過去問', pastExams)}
 			{@render categorySection('lecture', '講義資料', lectureRes)}
 			{@render categorySection('other', 'その他', otherRes)}
@@ -561,9 +572,20 @@
 {/snippet}
 
 <style>
-	/* 2-pane grid layout */
+	/* 2-pane grid layout (preview open) */
 	.preview-grid {
 		grid-template-columns: minmax(340px, 420px) 1fr;
+	}
+
+	/* 2-column resource list (preview closed) */
+	.resources-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-content: start;
+		gap: 1.125rem 2rem;
+	}
+	.resources-grid > :global(*) {
+		margin-top: 0;
 	}
 
 	/* active resource item: highlight + left accent bar */
