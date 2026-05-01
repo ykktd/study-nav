@@ -1,11 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
-import { type Handle, redirect } from "@sveltejs/kit";
+import { error, type Handle, redirect } from "@sveltejs/kit";
 import { env } from "$env/dynamic/public";
 
 export const handle: Handle = async ({ event, resolve }) => {
+  const supabaseUrl = env.PUBLIC_SUPABASE_URL;
+  const supabaseKey = env.PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    throw error(
+      500,
+      "Server configuration error: missing Supabase environment variables",
+    );
+  }
+
   event.locals.supabase = createServerClient(
-    env.PUBLIC_SUPABASE_URL ?? "",
-    env.PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? "",
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -32,18 +41,23 @@ export const handle: Handle = async ({ event, resolve }) => {
   );
 
   event.locals.safeGetSession = async () => {
-    const {
-      data: { session },
-    } = await event.locals.supabase.auth.getSession();
-    if (!session) return { session: null, user: null };
+    try {
+      const {
+        data: { session },
+      } = await event.locals.supabase.auth.getSession();
+      if (!session) return { session: null, user: null };
 
-    const {
-      data: { user },
-      error,
-    } = await event.locals.supabase.auth.getUser();
-    if (error) return { session: null, user: null };
+      const {
+        data: { user },
+        error: getUserError,
+      } = await event.locals.supabase.auth.getUser();
+      if (getUserError) return { session: null, user: null };
 
-    return { session, user };
+      return { session, user };
+    } catch (err) {
+      console.error("safeGetSession failed:", err);
+      return { session: null, user: null };
+    }
   };
 
   // Protect all routes except exact /login, /auth and their subroutes
