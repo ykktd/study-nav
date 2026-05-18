@@ -81,5 +81,23 @@ export const actions: Actions = {
 		});
 
 		if (error) return fail(500, { error: error.message });
+	},
+
+	deleteSubject: async ({ request, locals }) => {
+		const data = await request.formData();
+		const id = String(data.get('id') ?? '').trim();
+
+		if (!id) return fail(400, { error: 'IDが必要です' });
+
+		const { user } = await locals.safeGetSession();
+		if (!user) return fail(401, { error: '未認証です' });
+
+		const { error } = await locals.supabase
+			.from('subjects')
+			.delete()
+			.eq('id', id)
+			.eq('user_id', user.id);
+
+		if (error) return fail(500, { error: error.message });
 	}
 };

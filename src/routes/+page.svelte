@@ -46,12 +46,24 @@
 
 	// Modal state
 	let modalRef = $state<HTMLDialogElement | null>(null);
+	let deleteModalRef = $state<HTMLDialogElement | null>(null);
+	let subjectToDelete = $state<SubjectWithProgress | null>(null);
 
 	function openModal() {
 		modalRef?.showModal();
 	}
 	function closeModal() {
 		modalRef?.close();
+	}
+
+	function openDeleteModal(subject: SubjectWithProgress) {
+		subjectToDelete = subject;
+		deleteModalRef?.showModal();
+	}
+
+	function closeDeleteModal() {
+		deleteModalRef?.close();
+		subjectToDelete = null;
 	}
 </script>
 
@@ -164,37 +176,51 @@
 </div>
 
 {#snippet subjectCard(subject: SubjectWithProgress, archived = false)}
-	<a
-		href="/subjects/{subject.id}"
-		class="group flex min-h-44 cursor-pointer flex-col rounded-card border border-hairline-soft bg-surface-1 px-4.5 pt-4.5 pb-4 text-inherit no-underline transition-[border-color,background] duration-150 hover:border-hairline hover:bg-surface-2"
-		tabindex="0"
+	<div
+		class="group relative flex min-h-44 flex-col rounded-card border border-hairline-soft bg-surface-1 transition-[border-color,background] duration-150 hover:border-hairline hover:bg-surface-2"
 	>
-		<div class="mb-auto flex items-start justify-between gap-3">
-			<div>
-				<div class="text-[15.5px] font-semibold leading-[1.35] tracking-[0.01em] text-ink">{subject.name}</div>
-				<div class="mt-1.5 flex items-center gap-2 text-[12px] text-ink-4">
-					{#if subject.day_period}
-						<span class="mono">{archived ? '— 前学期' : subject.day_period}</span>
-					{/if}
+		<a
+			href="/subjects/{subject.id}"
+			class="flex flex-1 cursor-pointer flex-col px-4.5 pt-4.5 pr-12 pb-4 text-inherit no-underline"
+		>
+			<div class="mb-auto flex items-start justify-between gap-3">
+				<div>
+					<div class="text-[15.5px] font-semibold leading-[1.35] tracking-[0.01em] text-ink">{subject.name}</div>
+					<div class="mt-1.5 flex items-center gap-2 text-[12px] text-ink-4">
+						{#if subject.day_period}
+							<span class="mono">{archived ? '— 前学期' : subject.day_period}</span>
+						{/if}
+					</div>
 				</div>
+				{#if subject.exam_date}
+					<div class="mono whitespace-nowrap text-[11px] text-ink-4">
+						試験 {formatExamDate(subject.exam_date)}
+					</div>
+				{/if}
 			</div>
-			{#if subject.exam_date}
-				<div class="mono whitespace-nowrap text-[11px] text-ink-4">
-					試験 {formatExamDate(subject.exam_date)}
-				</div>
-			{/if}
-		</div>
-		<div class="mt-4.5 flex items-end justify-between gap-3">
-			{#if subject.past_exam_total > 0}
-				<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
-			{:else}
-				<div class="flex flex-col items-start justify-end gap-1.5 text-[11.5px] text-ink-4">
-					<span class="inline-flex items-center gap-1.5 rounded-md border border-dashed border-hairline px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[0.02em] text-ink-3">過去問 未登録</span>
-				</div>
-			{/if}
-			<div class="mono mb-1.5 -translate-x-1 self-end text-[13px] text-ink-3 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">開く →</div>
-		</div>
-	</a>
+			<div class="mt-4.5 flex items-end justify-between gap-3">
+				{#if subject.past_exam_total > 0}
+					<ProgressRing done={subject.past_exam_done} total={subject.past_exam_total} />
+				{:else}
+					<div class="flex flex-col items-start justify-end gap-1.5 text-[11.5px] text-ink-4">
+						<span class="inline-flex items-center gap-1.5 rounded-md border border-dashed border-hairline px-2 py-1 font-['IBM_Plex_Mono',monospace] text-[11px] tracking-[0.02em] text-ink-3">過去問 未登録</span>
+					</div>
+				{/if}
+				<div class="mono mb-1.5 -translate-x-1 self-end text-[13px] text-ink-3 opacity-0 transition-all duration-200 group-hover:translate-x-0 group-hover:opacity-100">開く →</div>
+			</div>
+		</a>
+		<button
+			type="button"
+			class="absolute top-3 right-3 inline-flex size-7 cursor-pointer items-center justify-center rounded-lg border border-hairline-soft bg-surface-1 text-ink-3 opacity-0 transition-[opacity,background,color,border-color] duration-150 hover:border-hairline hover:bg-surface-2 hover:text-ink group-hover:opacity-100 focus:opacity-100"
+			title="削除"
+			aria-label="{subject.name}を削除"
+			onclick={() => openDeleteModal(subject)}
+		>
+			<svg class="size-3.5" viewBox="0 0 24 24" aria-hidden="true">
+				<path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+			</svg>
+		</button>
+	</div>
 {/snippet}
 
 <!-- Add Subject Modal -->
@@ -234,6 +260,40 @@
 				<button type="button" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-hairline bg-surface-1 px-3.5 py-2.25 text-[13.5px] font-[inherit] text-ink hover:bg-surface-2" onclick={closeModal}>キャンセル</button>
 				<button type="submit" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-ink bg-ink px-3.5 py-2.25 text-[13.5px] font-[inherit] text-bg hover:bg-ink-hover">追加</button>
 			</div>
+		</form>
+	</div>
+</dialog>
+
+<!-- Delete Subject Modal -->
+<dialog bind:this={deleteModalRef} class="modal m-auto w-full max-w-105 rounded-card border border-hairline bg-surface-2 p-0 text-ink" onclose={() => (subjectToDelete = null)}>
+	<div class="px-7 py-6">
+		<div class="mb-4 flex items-center justify-between">
+			<h2 class="m-0 text-[16px] font-semibold">科目を削除しますか？</h2>
+			<button class="cursor-pointer border-none bg-transparent px-2 py-1 text-[14px] text-ink-3 hover:text-ink" onclick={closeDeleteModal} aria-label="閉じる">✕</button>
+		</div>
+		<p class="m-0 text-[13.5px] leading-6 text-ink-2">
+			{#if subjectToDelete}
+				「{subjectToDelete.name}」を削除すると、この科目に登録した過去問・講義資料・その他リンクもすべて削除されます。この操作は元に戻せません。
+			{:else}
+				この科目に登録した過去問・講義資料・その他リンクもすべて削除されます。この操作は元に戻せません。
+			{/if}
+		</p>
+		<form
+			class="mt-5 flex justify-end gap-2"
+			method="POST"
+			action="?/deleteSubject"
+			use:enhance={() => {
+				return async ({ result, update }) => {
+					if (result.type === 'success' || result.type === 'redirect') {
+						closeDeleteModal();
+					}
+					await update();
+				};
+			}}
+		>
+			<input name="id" type="hidden" value={subjectToDelete?.id ?? ''} />
+			<button type="button" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-hairline bg-surface-1 px-3.5 py-2.25 text-[13.5px] font-[inherit] text-ink hover:bg-surface-2" onclick={closeDeleteModal}>キャンセル</button>
+			<button type="submit" class="inline-flex cursor-pointer items-center gap-2 rounded-ctrl border border-prog-low bg-transparent px-3.5 py-2.25 text-[13.5px] font-[inherit] text-prog-low hover:bg-surface-1">削除する</button>
 		</form>
 	</div>
 </dialog>
