@@ -6,9 +6,11 @@
 	import CheckBox from '$lib/components/CheckBox.svelte';
 	import type { PageData } from './$types';
 	import type { Resource } from '$lib/types';
-	import { toPreviewUrl, daysUntil } from '$lib/types';
+	import type { DriveFileLink } from '$lib/types';
+	import { toPreviewUrl, daysUntil, parseDriveFileLink } from '$lib/types';
 
 	type ResourceCategory = 'past_exam' | 'lecture' | 'other';
+	type DriveNameFetchResult = { name: string; error: '' } | { name: ''; error: string };
 
 	interface Props {
 		data: PageData;
@@ -40,7 +42,7 @@
 
 	function canPreview(r: Resource): boolean {
 		const url = r.url.toLowerCase();
-		if (url.includes('drive.google.com')) return true;
+		if (parseDriveFileLink(r.url)) return true;
 		if (url.endsWith('.pdf')) return true;
 		return false;
 	}
@@ -54,11 +56,12 @@
 	let singleName = $state('');
 	let singleUrl = $state('');
 	let fetchingName = $state(false);
+	let singleNameError = $state('');
 
 	// Bulk mode state
 	let bulkUrlsText = $state('');
 	let bulkCategory = $state<ResourceCategory>('past_exam');
-	let bulkItems = $state<{ url: string; name: string }[]>([]);
+	let bulkItems = $state<{ url: string; name: string; error: string }[]>([]);
 	let fetchingBulk = $state(false);
 	let bulkRegistering = $state(false);
 	let bulkError = $state('');
@@ -68,6 +71,7 @@
 		modalMode = 'single';
 		singleName = '';
 		singleUrl = '';
+		singleNameError = '';
 		bulkUrlsText = '';
 		bulkItems = [];
 		bulkCategory = cat;
@@ -76,11 +80,6 @@
 	}
 	function closeModal() {
 		modalRef?.close();
-	}
-
-	function extractDriveFileId(url: string): string | null {
-		const m = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
-		return m ? m[1] : null;
 	}
 
 	function getDriveTokenFromCookie(): string | null {
@@ -92,45 +91,99 @@
 		return getDriveTokenFromCookie();
 	}
 
-	async function fetchDriveName(fileId: string, token: string): Promise<string | null> {
+	function splitBulkUrls(text: string): string[] {
+		return text.split(/[\n,、]+/).map((u) => u.trim()).filter(Boolean);
+	}
+
+	function isGoogleFileUrl(url: string): boolean {
 		try {
-			const res = await fetch(
-				`https://www.googleapis.com/drive/v3/files/${fileId}?fields=name`,
-				{ headers: { Authorization: `Bearer ${token}` } }
-			);
-			if (!res.ok) return null;
-			const json = await res.json();
-			return json.name ?? null;
+			const host = new URL(url.trim()).hostname.toLowerCase();
+			return host === 'drive.google.com' || host.endsWith('.drive.google.com') || host === 'docs.google.com' || host.endsWith('.docs.google.com');
 		} catch {
-			return null;
+			return false;
+		}
+	}
+
+	function driveFetchErrorMessage(status: number, hasResourceKey: boolean): string {
+		if (status === 401) return 'Drive連携の有効期限が切れている可能性があります。アカウント画面で再接続してください。';
+		if (status === 403) return 'このGoogleアカウントではファイル名を取得できません。権限または共有設定を確認してください。';
+		if (status === 404) {
+			return hasResourceKey
+				? 'ファイルが見つかりません。リンクまたは権限を確認してください。'
+				: 'ファイルが見つかりません。resourcekey付きの共有リンクを貼り直すと取得できる場合があります。';
+		}
+		return 'ファイル名を取得できませんでした。必要なら手入力してください。';
+	}
+
+	async function fetchDriveName(link: DriveFileLink, token: string): Promise<DriveNameFetchResult> {
+		try {
+			const params = new URLSearchParams({
+				fields: 'name',
+				supportsAllDrives: 'true'
+			});
+			const headers: Record<string, string> = {
+				Authorization: `Bearer ${token}`
+			};
+			if (link.resourceKey) {
+				headers['X-Goog-Drive-Resource-Keys'] = `${link.fileId}/${link.resourceKey}`;
+			}
+
+			const res = await fetch(`https://www.googleapis.com/drive/v3/files/${link.fileId}?${params}`, { headers });
+			if (!res.ok) {
+				return { name: '', error: driveFetchErrorMessage(res.status, !!link.resourceKey) };
+			}
+			const json = await res.json();
+			return json.name
+				? { name: json.name, error: '' }
+				: { name: '', error: 'ファイル名がレスポンスに含まれていませんでした。手入力してください。' };
+		} catch {
+			return { name: '', error: '通信に失敗しました。ネットワーク状態を確認して、必要なら手入力してください。' };
 		}
 	}
 
 	async function handleSingleUrlBlur() {
-		const fileId = extractDriveFileId(singleUrl);
-		if (!fileId || singleName) return;
+		singleNameError = '';
+		const link = parseDriveFileLink(singleUrl);
+		if (!link) {
+			if (isGoogleFileUrl(singleUrl)) singleNameError = '対応していないGoogle Drive URLです。共有リンクを確認してください。';
+			return;
+		}
+		if (singleName) return;
 		fetchingName = true;
 		const token = getDriveToken();
-		if (token) {
-			const name = await fetchDriveName(fileId, token);
-			if (name && !singleName) singleName = name;
+		if (!token) {
+			singleNameError = 'Drive連携が未接続または期限切れです。アカウント画面でGoogleドライブと連携してください。';
+			fetchingName = false;
+			return;
 		}
+		const result = await fetchDriveName(link, token);
+		if (result.name && !singleName) singleName = result.name;
+		singleNameError = result.error;
 		fetchingName = false;
 	}
 
 	async function fetchBulkNames() {
-		const urls = bulkUrlsText.split('\n').map((u) => u.trim()).filter(Boolean);
+		const urls = splitBulkUrls(bulkUrlsText);
 		if (!urls.length) return;
 		fetchingBulk = true;
 		const token = getDriveToken();
 		const results = await Promise.all(
 			urls.map(async (url) => {
-				const fileId = extractDriveFileId(url);
+				const link = parseDriveFileLink(url);
 				let name = '';
-				if (fileId && token) {
-					name = (await fetchDriveName(fileId, token)) ?? '';
+				let error = '';
+				if (!link) {
+					error = isGoogleFileUrl(url)
+						? '対応していないGoogle Drive URLです。'
+						: 'Google Driveファイルではないため自動取得をスキップしました。';
+				} else if (!token) {
+					error = 'Drive連携が未接続または期限切れです。';
+				} else {
+					const result = await fetchDriveName(link, token);
+					name = result.name;
+					error = result.error;
 				}
-				return { url, name };
+				return { url, name, error };
 			})
 		);
 		bulkItems = results;
@@ -399,6 +452,9 @@
 						bind:value={singleName}
 						class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13.5px] text-ink outline-none focus:border-hairline"
 					/>
+					{#if singleNameError}
+						<span class="text-[11.5px] leading-relaxed tracking-normal text-prog-low">{singleNameError}</span>
+					{/if}
 				</label>
 				<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
 					<span>カテゴリ <span class="text-prog-low">*</span></span>
@@ -428,10 +484,10 @@
 				{#if bulkItems.length === 0}
 					<!-- Step 1: URL input -->
 					<label class="flex flex-col gap-1.25 text-[12px] tracking-[0.04em] text-ink-3">
-						<span>URLを貼り付け（1行につき1URL）</span>
+						<span>URLを貼り付け（改行またはカンマ区切り）</span>
 						<textarea
 							bind:value={bulkUrlsText}
-							placeholder={"https://drive.google.com/file/d/AAA/view\nhttps://drive.google.com/file/d/BBB/view"}
+							placeholder={"https://drive.google.com/file/d/AAA/view\nhttps://drive.google.com/file/d/BBB/view, https://docs.google.com/document/d/CCC/edit"}
 							rows={6}
 							class="rounded-ctrl border border-hairline-soft bg-surface-3 px-3 py-2.25 font-[inherit] text-[13px] text-ink outline-none focus:border-hairline resize-none leading-relaxed"
 						></textarea>
@@ -462,6 +518,9 @@
 										class:border-prog-low={!item.name.trim()}
 									/>
 									<span class="overflow-hidden text-ellipsis whitespace-nowrap text-[11px] text-ink-4">{item.url}</span>
+									{#if item.error}
+										<span class="text-[11px] leading-relaxed text-prog-low">{item.error}</span>
+									{/if}
 								</div>
 								<button
 									type="button"

@@ -62,9 +62,56 @@ export function progressState(done: number, total: number): 'low' | 'mid' | 'hig
 	return 'high';
 }
 
+export interface DriveFileLink {
+	fileId: string;
+	resourceKey: string | null;
+	kind: 'drive-file' | 'google-doc' | 'google-sheet' | 'google-slide';
+}
+
+export function parseDriveFileLink(rawUrl: string): DriveFileLink | null {
+	try {
+		const url = new URL(rawUrl.trim());
+		const host = url.hostname.toLowerCase();
+		const path = url.pathname;
+		const resourceKey = url.searchParams.get('resourcekey');
+		let fileId: string | null = null;
+		let kind: DriveFileLink['kind'] = 'drive-file';
+
+		if (host === 'drive.google.com' || host.endsWith('.drive.google.com')) {
+			fileId = path.match(/\/file\/d\/([^/?]+)/)?.[1] ?? url.searchParams.get('id');
+		} else if (host === 'docs.google.com' || host.endsWith('.docs.google.com')) {
+			const match = path.match(/^\/(document|spreadsheets|presentation)\/d\/([^/?]+)/);
+			if (match) {
+				fileId = match[2];
+				if (match[1] === 'document') kind = 'google-doc';
+				if (match[1] === 'spreadsheets') kind = 'google-sheet';
+				if (match[1] === 'presentation') kind = 'google-slide';
+			}
+		}
+
+		if (!fileId) return null;
+		return { fileId, resourceKey, kind };
+	} catch {
+		return null;
+	}
+}
+
 export function toPreviewUrl(url: string): string {
-	const match = url.match(/drive\.google\.com\/file\/d\/([^/?]+)/);
-	if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+	const link = parseDriveFileLink(url);
+	if (!link) return url;
+
+	if (link.kind === 'drive-file') {
+		const params = link.resourceKey
+			? `?resourcekey=${encodeURIComponent(link.resourceKey)}`
+			: '';
+		return `https://drive.google.com/file/d/${link.fileId}/preview${params}`;
+	}
+
+	const params = link.resourceKey ? `?resourcekey=${encodeURIComponent(link.resourceKey)}` : '';
+	if (link.kind === 'google-doc') return `https://docs.google.com/document/d/${link.fileId}/preview${params}`;
+	if (link.kind === 'google-sheet') return `https://docs.google.com/spreadsheets/d/${link.fileId}/preview${params}`;
+	if (link.kind === 'google-slide') return `https://docs.google.com/presentation/d/${link.fileId}/preview${params}`;
+
 	return url;
 }
 
