@@ -60,13 +60,14 @@ export const handle: Handle = async ({ event, resolve }) => {
     }
   };
 
-  // Protect all routes except exact /login, /auth and their subroutes
+  // Protect all routes except exact /login, /auth, keep-alive and their subroutes
   const pathname = event.url.pathname;
   const isPublic =
     pathname === "/login" ||
     pathname.startsWith("/login/") ||
     pathname === "/auth" ||
-    pathname.startsWith("/auth/");
+    pathname.startsWith("/auth/") ||
+    pathname === "/api/keep-alive";
 
   if (!isPublic) {
     const { user } = await event.locals.safeGetSession();

@@ -72,11 +72,23 @@ pnpm install
 ```sh
 PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_xxxx
+KEEP_ALIVE_SECRET=<random-secret>
 ```
 
 ### 4. マイグレーションを適用
 
-Supabase Dashboard の **SQL Editor** を開き、`supabase/migrations/001_initial.sql` の内容を貼り付けて実行します。
+Supabase Dashboard の **SQL Editor** を開き、`supabase/migrations/` 配下の SQL を番号順に貼り付けて実行します。
+
+### Supabase の凍結防止
+
+`supabase/migrations/002_keep_alive.sql` で追加される `keep_alive()` RPC を、`/api/keep-alive` から定期的に呼び出します。
+
+GitHub Actions で定期実行する場合は、Repository secrets に以下を設定してください。
+
+- `KEEP_ALIVE_URL`: `https://<your-domain>/api/keep-alive`
+- `KEEP_ALIVE_SECRET`: アプリ側の `KEEP_ALIVE_SECRET` と同じ値
+
+`.github/workflows/supabase-keep-alive.yml` が 1 日 1 回 endpoint を呼び出します。
 
 ### 5. 開発サーバーを起動
 
